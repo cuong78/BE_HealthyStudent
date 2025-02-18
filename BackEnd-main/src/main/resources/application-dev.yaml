@@ -1,0 +1,91 @@
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/SWP391Healthy
+    username: root
+    password: 123456
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      auto-commit: false
+      pool-name: HikariCP
+      minimum-idle: 1
+      maximum-pool-size: 6
+      idle-timeout: 30000
+      max-lifetime: 600000
+      keepalive-time: 60000
+
+  jpa:
+    properties:
+      hibernate:
+        physical_naming_strategy: com.healthy.backend.init.PascalCaseNamingStrategy
+    hibernate:
+      ddl-auto: update
+      database-platform: org.hibernate.dialect.MySQLDialect
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+        implicit-strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl
+    open-in-view: true
+
+  jackson:
+    default-property-inclusion: non_null
+    serialization:
+      fail-on-empty-beans: false
+
+  cors:
+    configuration:
+      allowed-origins: "*"
+      allowed-methods: "*"
+      allowed-headers: "*"
+      exposed-headers: "*"
+      allow-credentials: true
+      max-age: 3600
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: noreply.mentalhealthcare@gmail.com
+    password: vuyprsujxntkpfdn
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls.enable: true
+
+server:
+  address: 0.0.0.0
+  port: 8080
+  tomcat:
+    threads:
+      min-spare: 2
+      max: 5
+  compression:
+    enabled: true
+    mime-types: application/json,text/html,text/xml
+    min-response-size: 1024
+
+hibernate:
+  transaction:
+    jta:
+      platform: org.hibernate.service.jta.platform.internal.AtomikosJtaPlatform
+
+logging:
+  level:
+    com.zaxxer.hikari.HikariDataSource: DEBUG
+    root: INFO
+    org.springframework: INFO
+    com.zaxxer.hikari: WARN
+    org.hibernate.SQL: WARN
+    org.hibernate.type.descriptor.sql.BasicBinder: OFF
+    org.springframework.security.config.annotation.authentication.configuration.InitializeUserDetailsBeanManagerConfigurer: ERROR
+
+jwt:
+  secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+  expiration: 86400000
+  refresh-token:
+    expiration: 604800000
+
+app:
+  url: http://localhost:8080

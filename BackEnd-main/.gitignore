@@ -1,0 +1,77 @@
+### General ###
+.DS_Store
+.vscode/
+HELP.md
+requirements.txt
+
+### Build & Dependencies ###
+target/
+build/
+!**/src/main/**/target/
+!**/src/test/**/target/
+!**/src/main/**/build/
+!**/src/test/**/build/
+.mvn/
+.mvn/wrapper/maven-wrapper.jar
+
+### IDE Specific ###
+# Spring Tool Suite (STS)
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings/
+.springBeans
+.sts4-cache
+
+# IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+*.~
+
+# NetBeans
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+# Eclipse
+*.metadata/
+*.classpath
+*.project
+*.settings/
+
+# Other editors
+*.sublime-workspace
+*.vscode/
+
+### Logs ###
+logs/
+*.log
+*.log.*
+
+### Application Properties ###
+application-*.properties
+.env
+
+### Temporary & Backup Files ###
+*.swp
+*.swo
+*.bak
+*.tmp
+*.temp
+*.cache
+*.java~
+*.class
+*.jar
+*.war
+*.ear
+*~
+
+### Testing ###
+/coverage/
+/test-output/
+/reports/

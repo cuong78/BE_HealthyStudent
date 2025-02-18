@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redirecting...</title>
+    <style>
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background-color: #f3f3f3;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            text-align: center;
+            background-color: #fff;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            font-size: 36px;
+            color: #444;
+            margin-bottom: 20px;
+        }
+        p {
+            font-size: 16px;
+            color: #666;
+        }
+        .loading-text {
+            font-size: 20px;
+            color: #888;
+        }
+        .progress-bar {
+            width: 100%;
+            background-color: #ddd;
+            height: 8px;
+            margin-top: 20px;
+            border-radius: 5px;
+        }
+        .progress-bar-inner {
+            height: 100%;
+            background-color: #4CAF50;
+            width: 0;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <h1> Authentication Successfully </h1>
+    <h2> Welcome </h2>
+    <p>You're being redirected...</p>
+    <p class="loading-text">Redirecting in <span id="countdown">5</span> seconds...</p>
+    <div class="progress-bar">
+        <div class="progress-bar-inner" id="progress"></div>
+    </div>
+</div>
+
+<script>
+    // Countdown timer and progress bar functionality
+    let countdownTime = 5;
+    let countdownElement = document.getElementById('countdown');
+    let progressBar = document.getElementById('progress');
+
+    // Update countdown every second
+    let interval = setInterval(function() {
+        countdownTime--;
+        countdownElement.textContent = countdownTime;
+        // Update progress bar
+        progressBar.style.width = (100 - (countdownTime * 100 / countdownTime)) + '%';
+
+        if (countdownTime <= 0) {
+            // Clear the interval when time reaches 0
+            clearInterval(interval);
+            // Redirect to the success page
+            window.location.href = "https://www.youtube.com/watch?v=xvFZjo5PgG0&ab_channel=Duran";
+        }
+    }, 1000);
+</script>
+</body>
+</html>
