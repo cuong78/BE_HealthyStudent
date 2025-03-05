@@ -30,6 +30,8 @@ public class PsychologistResponse {
     private Integer yearsOfExperience;
     @Schema(example = "Active")
     private String status;
-    private UsersResponse usersResponse;
+    @Schema(example = "")
+    private UsersResponse info;
+    @Schema(example = "")
     private List<AppointmentResponse> appointment;
 }

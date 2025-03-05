@@ -7,6 +7,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -27,4 +29,10 @@ public class SurveyQuestionResultResponse {
     private String answer;
     @Schema(example = "1")
     private Integer score;
-} 
+    @Schema(example = "")
+    private List<QuestionOption> answers;
+    @Schema(example = "")
+    private List<StatusStudent> ansStudent;
+    
+
+}

@@ -1,30 +1,21 @@
 package com.healthy.backend.controller;
 
-import java.util.List;
-
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
-import com.healthy.backend.dto.survey.SurveyQuestionResult;
-import com.healthy.backend.dto.survey.SurveyResultsResponse;
+import com.healthy.backend.dto.survey.*;
+import com.healthy.backend.entity.Users;
 import com.healthy.backend.exception.ResourceNotFoundException;
+import com.healthy.backend.security.TokenService;
 import com.healthy.backend.service.SurveyService;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @CrossOrigin
 @RestController
@@ -33,34 +24,68 @@ import lombok.RequiredArgsConstructor;
 @SecurityRequirement(name = "Bearer Authentication")
 @Tag(name = "Survey Controller", description = "Survey related APIs")
 public class SurveyController {
+
     private final SurveyService surveyService;
+    private final TokenService tokenService;
 
     @Operation(
-
             summary = "Get all surveys",
             description = "Returns a list of available surveys."
     )
     @GetMapping()
-    public ResponseEntity<List<SurveyResultsResponse>> getAllSurveys() {
-
-        List<SurveyResultsResponse> surveyResultsResponses = surveyService.getAllSurveyResults();
-        if(!surveyResultsResponses.isEmpty()) {
-            return ResponseEntity.ok(surveyResultsResponses);
-        }
+    public ResponseEntity<List<SurveysResponse>> getAllSurveys(HttpServletRequest request) {
+        Users user = tokenService.retrieveUser(request);
+        List<SurveysResponse> surveys = surveyService.getAllSurveys(user);
+        if (surveys.isEmpty()) {
             return ResponseEntity.noContent().build();
-
-
-
+        }
+        return ResponseEntity.ok(surveys);
     }
 
     @Operation(
-            deprecated = true,
+            summary = "Get score in survey",
+            description = "Return the score that the student achieved in the survey"
+    )
+    @PostMapping("/options/scoreResult")
+    public ResponseEntity<?> getScoreFromStudentInSuv(
+            @RequestParam String surveyId,
+            @RequestBody List<String> optionId,
+            @RequestParam(required = false) String studentId) {
+        StatusStudent status = surveyService.getScoreFromStudentInSuv(surveyId, optionId, studentId);
+        return ResponseEntity.ok(status);
+    }
+
+    @Operation(
             summary = "Get survey details",
             description = "Returns details for a specific survey."
     )
-    @GetMapping("/{surveyId}")
-    public String getSurveyDetails(@PathVariable String surveyId) {
-        return "Survey details for ID " + surveyId;
+    @GetMapping("/questions")
+    public ResponseEntity<?> getSurveyDetails(@RequestParam String surveyId) {
+        SurveyQuestionResponse surveyQuestions = surveyService.getSurveyQuestion(surveyId);
+        if (surveyQuestions == null) {
+            throw new ResourceNotFoundException("No survey questions found");
+        }
+        return ResponseEntity.ok(surveyQuestions);
+    }
+
+    @Operation(
+            summary = "Update question in survey",
+            description = "Updates a question in a survey."
+    )
+    @PutMapping("/questions")
+    public ResponseEntity<?> updateSurveyQuestion(
+            @RequestParam String surveyId,
+            @Valid @RequestBody SurveyQuestionResponse surveyQuestionResponse
+
+    ) {
+        try {
+            surveyService.updateSurveyQuestion(surveyId, surveyQuestionResponse);
+            return ResponseEntity.ok("Survey question updated sucessfully");
+        } catch (ResourceNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while updating the survey question" + ex.getMessage());
+        }
     }
 
     @Operation(
@@ -68,19 +93,21 @@ public class SurveyController {
             summary = "Submit survey response",
             description = "Submits a response to a survey."
     )
-    @PostMapping("/{surveyId}/take")
-    public String submitSurveyResponse(@PathVariable String surveyId, @RequestBody String responses) {
+    @PostMapping("/take") // Only Student
+    public String submitSurveyResponse(@RequestParam String surveyId, @RequestBody String responses) {
         return "Survey responses saved for survey " + surveyId;
     }
 
     @Operation(
-            deprecated = true,
+
             summary = "Get survey results",
             description = "Returns results for a specific survey."
     )
-    @GetMapping("/{surveyId}/result")
-    public String getSurveyResults(@PathVariable String surveyId) {
-        return "Survey results for ID " + surveyId;
+    @GetMapping("/result")
+    public ResponseEntity<?> getSurveyResults(HttpServletRequest request,
+                                              @RequestParam String surveyId) {
+        SurveyResultsResponse surveyResult = surveyService.getSurveyResultsBySurveyID(request, surveyId);
+        return ResponseEntity.ok(surveyResult);
     }
 
     @Operation(
@@ -88,19 +115,20 @@ public class SurveyController {
             summary = "Submit survey feedback",
             description = "Submits feedback for a survey."
     )
-    @PostMapping("/{surveyId}/feedback")
-    public String submitSurveyFeedback(@PathVariable String surveyId, @RequestBody String feedback) {
+    @PostMapping("/feedback")  // Manager or Psychologist Only
+    public String submitSurveyFeedback(
+            @RequestParam String surveyId, @RequestBody String feedback) {
         return "Feedback submitted for survey " + surveyId;
     }
 
     @Operation(
-            deprecated = true,
             summary = "Create survey",
             description = "Creates a new survey."
     )
-    @PostMapping("/create")
-    public String createSurvey(@RequestBody String surveyDetails) {
-        return "New survey created successfully";
+    @PostMapping("/create")  // Manager or Psychologist Only
+    public ResponseEntity<SurveyRequest> createSurvey(
+            @Valid @RequestBody SurveyRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(new SurveyRequest());
     }
 
     @Operation(
@@ -108,7 +136,7 @@ public class SurveyController {
             summary = "Update survey",
             description = "Updates an existing survey."
     )
-    @PutMapping("/{surveyId}/update")
+    @PutMapping("/update") // Manager or Psychologist Only
     public String updateSurvey(@PathVariable String surveyId, @RequestBody String surveyDetails) {
         return "Survey updated successfully";
     }
@@ -118,77 +146,68 @@ public class SurveyController {
             summary = "Cancel survey",
             description = "Cancels a survey."
     )
-    @DeleteMapping("/{surveyId}/cancel")
-    public String cancelSurvey(@PathVariable String surveyId) {
+    @DeleteMapping("/cancel") // Manager or Psychologist Only
+    public String cancelSurvey(@RequestParam String surveyId) {
         return "Survey canceled successfully";
     }
 
     @Operation(
-            deprecated = true,
             summary = "Add question to survey",
             description = "Adds a question to a survey."
     )
-    @PostMapping("/{surveyId}/questions")
-    public String addSurveyQuestion(@PathVariable String surveyId, @RequestBody String question) {
-        return "Question added to survey " + surveyId;
-    }
-
-    @Operation(
-
-        summary = "Update question in survey",
-        description = "Updates a question in a survey."
-    )
-    @PutMapping("/{surveyId}/questions/{questionId}/answers/{answerId}")
-    public ResponseEntity<?> updateSurveyQuestion(
-       @PathVariable String surveyId,
-       @PathVariable String questionId,
-       @PathVariable String answerId,
-       @Valid @RequestBody SurveyQuestionResult surveyQuestionResult
-
-    )
-        {
-            try {
-                surveyService.updateSurveyQuestion(questionId, surveyId, answerId, surveyQuestionResult);
-                return ResponseEntity.ok("Survey question updated sucessfully");
-
-            }
-            catch(ResourceNotFoundException ex) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
-            }
-            catch (Exception ex) {
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while updating the survey question" + ex.getMessage());
-            }
+    @PostMapping("/questions")
+    public ResponseEntity<?> addSurveyQuestion(HttpServletRequest request,
+                                               @RequestParam String surveyId,
+                                               @RequestBody SurveyQuestionResponse question) {
+        try {
+            surveyService.addSurveyQuestion(request, surveyId, question);
+            return ResponseEntity.ok("Survey question add successfully");
+        } catch (ResourceNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while adding the survey question" + ex.getMessage());
         }
+    }
 
     @Operation(
             deprecated = true,
             summary = "Delete question from survey",
             description = "Deletes a question from a survey."
     )
-    @DeleteMapping("/{surveyId}/questions/{questionId}")
-    public String deleteSurveyQuestion(@PathVariable String surveyId, @PathVariable String questionId) {
+    @DeleteMapping("/questions/{questionId}")
+    public String deleteSurveyQuestion(@RequestParam String surveyId, @PathVariable String questionId) {
         return "Question removed from survey " + surveyId;
     }
 
     @Operation(
-            deprecated = true,
             summary = "Add answer to question",
             description = "Adds an answer to a question."
     )
-    @PostMapping("/{surveyId}/questions/{questionId}/answers")
-    public String addAnswerToQuestion(@PathVariable String surveyId, @PathVariable String questionId, @RequestBody String answer) {
-        return "Answer added to question " + questionId + " in survey " + surveyId;
+    @PostMapping("/questions/{questionId}/answers")
+    public ResponseEntity<?> addAnswerToQuestion(@RequestParam String surveyId, @PathVariable String questionId, @RequestBody List<QuestionOption> answer) {
+        try {
+            surveyService.addAnswerToQuestion(surveyId, questionId, answer);
+            ;
+            return ResponseEntity.ok("List of answers add sucessfully");
+        } catch (ResourceNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while adding list of answers  " + ex.getMessage());
+        }
     }
 
-
     @Operation(
-            deprecated = true,
             summary = "Get student survey results",
             description = "Returns results for a specific student's survey."
     )
-    @GetMapping("/{surveyId}/students-results")
-    public String getStudentSurveyResults(@PathVariable String surveyId) {
-        return "Student survey results for survey " + surveyId;
+    @GetMapping("/results/student")
+    public ResponseEntity<?> getStudentIDSurveyResults(
+            HttpServletRequest request,
+            @RequestParam String surveyId,
+            @RequestParam(required = false) String studentId) {
+        String studentID = tokenService.validateRequestStudentID(request, studentId);
+        SurveyQuestionResponse surveyResponse = surveyService.getSurveyResultByStudentID(request, surveyId, studentID);
+        return ResponseEntity.ok(surveyResponse);
     }
 
     @Operation(
@@ -206,19 +225,29 @@ public class SurveyController {
             summary = "Schedule survey",
             description = "Schedules a survey."
     )
-    @PostMapping("/{surveyId}/schedule")
-    public String scheduleSurvey(@PathVariable String surveyId, @RequestBody String scheduleDetails) {
+    @PostMapping("/schedule")
+    public String scheduleSurvey(
+            @RequestParam String surveyId,
+            @RequestBody String scheduleDetails) {
         return "Survey " + surveyId + " scheduled successfully";
     }
 
     @Operation(
-            deprecated = true,
             summary = "Update survey status",
             description = "Updates the status of a survey."
     )
-    @PutMapping("/{surveyId}/status")
-    public String updateSurveyStatus(@PathVariable String surveyId, @RequestBody String status) {
-        return "Survey status updated for survey " + surveyId;
+    @PutMapping("/status")
+    public ResponseEntity<?> updateSurveyStatus(
+            @RequestParam String surveyId,
+            @RequestBody SurveyRequest status) {
+        try {
+            surveyService.updateSurveyStatus(surveyId, status);
+            return ResponseEntity.ok("Survey status updated successfully");
+        } catch (ResourceNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while updating status of survey" + ex.getMessage());
+        }
     }
 
     @Operation(
@@ -226,8 +255,8 @@ public class SurveyController {
             summary = "Enable anonymous survey",
             description = "Enables anonymous mode for a survey."
     )
-    @PostMapping("/{surveyId}/anonymous")
-    public String enableAnonymousSurvey(@PathVariable String surveyId) {
+    @PostMapping("/anonymous")
+    public String enableAnonymousSurvey(@RequestParam String surveyId) {
         return "Survey " + surveyId + " set to anonymous";
     }
 
@@ -236,8 +265,10 @@ public class SurveyController {
             summary = "Export survey results",
             description = "Exports survey results in a specified format."
     )
-    @GetMapping("/{surveyId}/export")
-    public String exportSurveyResults(@PathVariable String surveyId, @RequestParam String format) {
+    @GetMapping("/export")
+    public String exportSurveyResults(
+            @RequestParam String surveyId,
+            @RequestParam String format) {
         return "Survey results exported in format: " + format;
     }
 }

@@ -1,5 +1,7 @@
 package com.healthy.backend.entity;
 
+import com.healthy.backend.enums.Gender;
+import com.healthy.backend.enums.Role;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
@@ -23,8 +25,8 @@ public class Users implements UserDetails {
     @Column(name = "UserID", length = 36, nullable = false)
     private String userId;
 
-    @Column(name = "Username", length = 50, nullable = false, unique = true)
-    private String username;
+    @Column(name = "HashedID", nullable = false)
+    private String hashedID;
 
     @Column(name = "PasswordHash", nullable = false)
     private String passwordHash;
@@ -35,15 +37,18 @@ public class Users implements UserDetails {
     @Column(name = "Email", length = 100, unique = true)
     private String email;
 
+    @Column(name = "Address", length = 100)
+    private String address;
+
     @Column(name = "PhoneNumber", length = 15)
     private String phoneNumber;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "Role", nullable = false)
-    private UserRole role;
+    private Role role;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "Gender", columnDefinition = "ENUM('Male', 'Female', 'Other')")
+    @Column(name = "Gender")
     private Gender gender;
 
     @Column(name = "CreatedAt", nullable = false, updatable = false)
@@ -52,14 +57,14 @@ public class Users implements UserDetails {
     @Column(name = "UpdatedAt", nullable = false)
     private LocalDateTime updatedAt;
 
-    @Column(name = "ResetToken")
-    private String resetToken;
-
-    @Column(name = "ResetTokenExpiry")
-    private LocalDateTime resetTokenExpiry;
-
     @Column(name = "IsVerified", nullable = false)
     private boolean isVerified;
+
+    @Column(name = "isActive")
+    private boolean isActive;
+
+    @Column(name = "isDeleted")
+    private boolean isDeleted;
 
     @Column(name = "VerificationToken", nullable = false)
     private String verificationToken;
@@ -70,6 +75,8 @@ public class Users implements UserDetails {
     @PrePersist
     protected void onCreate() {
         isVerified = false;
+        isDeleted = false;
+        isActive = true;
         if (createdAt == null) {
             this.createdAt = LocalDateTime.now();
         }
@@ -96,40 +103,10 @@ public class Users implements UserDetails {
 
     @Override
     public String getUsername() {
-        return username;
+        return hashedID;
     }
 
     public boolean isPresent() {
         return userId != null;
-    }
-
-    public void setResetToken(String token) {
-        this.resetToken = token;
-        this.resetTokenExpiry = LocalDateTime.now().plusHours(24);
-    }
-
-    public boolean isResetTokenValid(String token) {
-        return resetToken != null &&
-                resetToken.equals(token) &&
-                resetTokenExpiry != null &&
-                resetTokenExpiry.isAfter(LocalDateTime.now());
-    }
-
-    public void clearResetToken() {
-        this.resetToken = null;
-        this.resetTokenExpiry = null;
-    }
-
-    public enum UserRole {
-        STUDENT,
-        PARENT,
-        PSYCHOLOGIST,
-        MANAGER
-    }
-
-    public enum Gender {
-        Male,
-        Female,
-        Other
     }
 }

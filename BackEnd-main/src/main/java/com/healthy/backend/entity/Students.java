@@ -1,6 +1,5 @@
 package com.healthy.backend.entity;
 
-import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -20,15 +19,9 @@ public class Students {
     @Column(name = "UserID", length = 36, nullable = false)
     private String userID;
 
-    @Column(name = "ParentID", length = 36, nullable = false)
+    // Nullable, student can exist without a parent
+    @Column(name = "ParentID", length = 36, nullable = true)
     private String parentID;
-
-    @Column(name = "FullName", length = 100, nullable = false)
-    private String fullName;
-
-    @Schema(example = "student@example.com")
-    @Column(name = "Email", length = 100, nullable = false, unique = true)
-    private String email;
 
     @Column(name = "Grade")
     private Integer grade;
@@ -48,14 +41,24 @@ public class Students {
     @Column(name = "DepressionScore")
     private Integer depressionScore;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "UserID", referencedColumnName = "UserID", insertable = false, updatable = false)
     private Users user;
 
-    @ManyToOne
+    @ManyToOne(optional = true)
     @JoinColumn(name = "ParentID", referencedColumnName = "ParentID", insertable = false, updatable = false)
     private Parents parents;
 
+    public Students(String studentID, String userID, Integer grade, String className, String schoolName, Integer anxietyScore, Integer depressionScore, Integer stressScore) {
+        this.studentID = studentID;
+        this.userID = userID;
+        this.grade = grade;
+        this.className = className;
+        this.schoolName = schoolName;
+        this.depressionScore = depressionScore;
+        this.anxietyScore = anxietyScore;
+        this.stressScore = stressScore;
+    }
     public Students(String studentID, String userID, String parentID, Integer grade, String className, String schoolName, Integer anxietyScore, Integer depressionScore, Integer stressScore) {
         this.studentID = studentID;
         this.userID = userID;

@@ -2,7 +2,10 @@ package com.healthy.backend.dto.appointment;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @Builder
@@ -10,11 +13,8 @@ import lombok.*;
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class AppointmentUpdateRequest {
-
-    @Schema(example = "TSPSY001160225")
+    @Schema(example = "")
     private String timeSlotId;
-    @Schema(example = "Scheduled")
-    private String status;
     @Schema(example = "Notes")
     private String notes;
 }

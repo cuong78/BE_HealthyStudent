@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class DepartmentResponse {
-    @Schema(example = "DP01")
+    @Schema(example = "DPT01")
     private String departmentId;
     @Schema(example = "Psychology")
     private String departmentName;

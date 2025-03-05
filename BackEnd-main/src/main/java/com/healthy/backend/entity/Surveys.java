@@ -1,5 +1,6 @@
 package com.healthy.backend.entity;
 
+import com.healthy.backend.enums.SurveyStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -7,6 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Getter
@@ -26,6 +28,12 @@ public class Surveys {
     @Column(name = "Description", columnDefinition = "TEXT")
     private String description;
 
+    @Column(name = "Details", columnDefinition = "TEXT")
+    private String details;
+
+    @Column(name = "Duration", length = 100)
+    private String duration;
+
     @Column(name = "CategoryID", length = 36, nullable = false)
     private String categoryID;
 
@@ -36,8 +44,8 @@ public class Surveys {
     private LocalDateTime createdAt;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "Status", length = 50, columnDefinition = "ENUM('Unfinished', 'Finished', 'Cancelled')", nullable = false)
-    private Status status;
+    @Column(name = "Status", length = 50, nullable = false)
+    private SurveyStatus status;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "CategoryID", referencedColumnName = "CategoryID", insertable = false, updatable = false)
@@ -47,7 +55,10 @@ public class Surveys {
     @JoinColumn(name = "CreatedBy", referencedColumnName = "UserID", insertable = false, updatable = false)
     private Users creator;
 
-    public Surveys(String surveyID, String surveyName, String description, String categoryID, String createdBy, Status status) {
+    @OneToMany(mappedBy = "surveys", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Notifications> notifications;
+
+    public Surveys(String surveyID, String surveyName, String description, String categoryID, String createdBy, SurveyStatus status) {
         this.surveyID = surveyID;
         this.surveyName = surveyName;
         this.description = description;
@@ -61,11 +72,5 @@ public class Surveys {
         if (createdAt == null) {
             createdAt = LocalDateTime.now();
         }
-    }
-
-    public enum Status {
-        Unfinished,
-        Finished,
-        Cancelled
     }
 } 

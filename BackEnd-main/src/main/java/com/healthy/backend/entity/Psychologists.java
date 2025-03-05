@@ -1,13 +1,11 @@
 package com.healthy.backend.entity;
 
+import com.healthy.backend.enums.PsychologistStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.data.jpa.repository.support.SimpleJpaRepository;
-
-import java.util.Set;
 
 @Entity
 @Getter
@@ -29,7 +27,7 @@ public class Psychologists {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "Status", nullable = false)
-    private Status status;
+    private PsychologistStatus status;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "UserID", referencedColumnName = "UserID", insertable = false, updatable = false)
@@ -50,20 +48,14 @@ public class Psychologists {
     }
 
     public Psychologists() {
-        status = Status.Active;
+        status = PsychologistStatus.ACTIVE;
     }
 
-    public Psychologists(String psychologistID, String userID, Integer yearsOfExperience, Status status,String departmentID) {
+    public Psychologists(String psychologistID, String userID, Integer yearsOfExperience, PsychologistStatus status,String departmentID) {
         this.psychologistID = psychologistID;
         this.userID = userID;
         this.yearsOfExperience = yearsOfExperience;
         this.status = status;
         this.departmentID = departmentID;
-    }
-
-    public enum Status {
-        Active,
-        OnLeave,
-        Inactive
     }
 } 

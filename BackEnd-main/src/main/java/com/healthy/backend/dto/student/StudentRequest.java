@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class StudentRequest {
-    @Schema(example = "S001")
+    @Schema(example = "STU001")
     private String studentID;
     @Schema(example = "Doe")
     private String name;

@@ -2,9 +2,6 @@ package com.healthy.backend.dto.programs;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.healthy.backend.dto.student.StudentResponse;
-import com.healthy.backend.entity.Programs;
-import com.healthy.backend.entity.Students;
-import com.healthy.backend.entity.Tags;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -21,7 +18,7 @@ import java.util.Set;
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ProgramsResponse {
-    @Schema(example = "US001")
+    @Schema(example = "UID001")
     private String programID;
     @Schema(example = "Example Program")
     private String title;
@@ -32,9 +29,11 @@ public class ProgramsResponse {
     @Schema(example = "2")
     private Integer duration;
     @Schema(example = "10")
-    private Integer numberParticipants;
+    private Integer currentParticipants;
+    @Schema(example = "20")
+    private Integer maxParticipants;
     @Schema(example = "Active")
-    private Programs.Status status;
+    private String status;
     @Schema(example = "Prof. John Anderson")
     private String facilitatorName;
     @Schema(example = "Psychology")
@@ -44,7 +43,7 @@ public class ProgramsResponse {
     @Schema(example = "2023-01-01")
     private LocalDate createdAt;
     @Schema(example = "Online")
-    private Programs.Type type;
+    private String type;
     @Schema(example = "https://zoom.us/j/123456789")
     private String meetingLink;
     @Schema(example = "10")

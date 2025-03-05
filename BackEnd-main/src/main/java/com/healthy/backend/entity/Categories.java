@@ -1,5 +1,6 @@
 package com.healthy.backend.entity;
 
+import com.healthy.backend.enums.SurveyCategory;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -20,9 +21,5 @@ public class Categories {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "CategoryName", length = 100, nullable = false)
-    private MentalHealthCategory categoryName;
-
-    public enum MentalHealthCategory {
-        Stress, Anxiety, Depression
-    }
+    private SurveyCategory categoryName;
 } 

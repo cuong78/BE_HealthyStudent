@@ -15,12 +15,18 @@ import java.util.List;
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class SurveyQuestionResponse {
-    @Schema(example = "Q001")
-    private String questionId;
+    @Schema(example = "SUR001")
+    private String surveyId;
     @Schema(example = "How are you feeling today?")
-    private String questionText;
-    @Schema(example = "General")
-    private String questionCategory;
-    @Schema(examples = {"1", "2", "3", "4", "5"})
-    private List<String> questionOptions;
+    private String title;
+    @Schema(example = "")
+    private String description;
+    @Schema(example = "")
+    private Integer numberOfQuestions;
+    @Schema(example = "")
+    private List<QuestionResponse> questionList;
+    @Schema(example = "")
+    private String completeStatus;
+    @Schema(example = "")
+    private String totalScore;
 }

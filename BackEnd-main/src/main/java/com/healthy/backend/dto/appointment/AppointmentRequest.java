@@ -14,10 +14,9 @@ import lombok.NoArgsConstructor;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class AppointmentRequest {
 
-    @Schema(example = "US002")
+    @Schema(hidden = true)
     private String userId;
 
-    @Schema(example = "TSPSY00127022500")
     private String timeSlotId;
 
     @Schema(hidden = true, example = "Active")

@@ -19,7 +19,8 @@ import org.springframework.context.annotation.Configuration;
                         name = "Health service Team",
                         email = "support@healthservice.com",
                         url = "https://www.cybriadev.com"
-                )
+                ),
+                summary = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiIsImlhdCI6MTczOTg0NzMyNywiZXhwIjoxNzM5OTMzNzI3fQ._-IpOX-qHVr73XaMCvkqrvAsgXmkZYUsceourKqAzdk"
         ),
         servers = {
                 @Server(
@@ -40,5 +41,4 @@ import org.springframework.context.annotation.Configuration;
         in = SecuritySchemeIn.HEADER
 )
 public class SwaggerConfig {
-    // Configuration class can be empty as we're using annotations for configuration
-} 
+}

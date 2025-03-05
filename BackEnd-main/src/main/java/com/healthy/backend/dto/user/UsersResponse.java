@@ -2,10 +2,11 @@ package com.healthy.backend.dto.user;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.healthy.backend.dto.appointment.AppointmentResponse;
+import com.healthy.backend.dto.programs.ProgramParticipationResponse;
+import com.healthy.backend.dto.programs.ProgramsResponse;
 import com.healthy.backend.dto.psychologist.PsychologistResponse;
 import com.healthy.backend.dto.student.StudentResponse;
 import com.healthy.backend.dto.survey.SurveyResultsResponse;
-import com.healthy.backend.entity.Users;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -21,13 +22,13 @@ import java.util.List;
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class UsersResponse {
-    @Schema(example = "US001")
+    @Schema(example = "UID001")
     private String userId;
     @Schema(example = "username1")
     private String username;
     @Schema(example = "eyJhbGciOiJIUzI1NiJ9" +
-            ".eyJzdWIiOiJhZG1pbiIsImlhdCI6MTczOTUzNTI2NiwiZXhwIjoxNzM5NjIxNjY2fQ" +
-            ".WWZ2yAdX80F6H1HZuqRGrre4C7YBmarUdQFyXbxKpLc")
+            ".5NjIxNjY2fQ" +
+            ".re4CXbxKpLc")
     private String passwordHash;
     @Schema(example = "John Doe")
     private String fullName;
@@ -47,7 +48,7 @@ public class UsersResponse {
             "}")
     private PsychologistResponse psychologistInfo;
     @Schema(example = "Student{" +
-            "studentId='S001'," +
+            "studentId='STU001'," +
             "grade=10," +
             "className='A'," +
             "schoolName='Example School'," +
@@ -57,10 +58,24 @@ public class UsersResponse {
     private List<StudentResponse> children;
     @Schema(examples = {"Appointment 1", "Appointment 2", "Appointment 3"})
     private List<AppointmentResponse> appointmentsRecord;
+    private List<ProgramParticipationResponse> programParticipationRecord;
+    private List<ProgramsResponse> programsRecord;
     @Schema(examples = {"Survey 1", "Survey 2", "Survey 3"})
     private List<SurveyResultsResponse> surveyResults;
     @Schema(example = "2023-01-01")
     private LocalDateTime createdAt;
     @Schema(example = "2023-01-01")
     private LocalDateTime updatedAt;
+    @Schema(example = "")
+    private StudentResponse studentResponse;
+    @Schema(example = "")
+    private PsychologistResponse psychologistResponse;
+    @Schema(example = "")
+    private List<StudentResponse> childrenResponse;
+    @Schema(example = "")
+    private boolean verified;
+    @Schema(example = "")
+    private boolean active;
+    @Schema(example = "")
+    private boolean deleted;
 }

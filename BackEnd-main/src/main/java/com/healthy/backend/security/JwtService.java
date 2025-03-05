@@ -7,14 +7,14 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 
 @Service
@@ -29,31 +29,31 @@ public class JwtService {
     @Value("${jwt.refresh-token.expiration}")
     private long refreshExpiration;
 
-    public String extractUsername(String token) {
+    public String extractHashedID(String token) {
         return extractClaim(token, Claims::getSubject);
     }
 
-    public String generateToken(Users user) {
-        return generateToken(new HashMap<>(), user);
+    public String extractRole(String token) {
+        return extractClaim(token, claims -> claims.get("role", String.class));
     }
 
-    public String generateToken(Map<String, Object> extraClaims, Users user) {
-        return buildToken(extraClaims, user, jwtExpiration);
+    public boolean extractIsVerified(String token) {
+        return extractClaim(token, claims -> claims.get("isVerified", Boolean.class));
     }
 
-    public String generateVerificationToken(String email) {
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("email", email);
-        return Jwts.builder()
-                .setClaims(claims)
-                .setSubject(email)
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + 24 * 60 * 60 * 1000))  // 24 hours expiry
-                .signWith(getSignInKey(), SignatureAlgorithm.HS256)
-                .compact();
+    public boolean extractIsActive(String token) {
+        return extractClaim(token, claims -> claims.get("isActive", Boolean.class));
     }
 
     public String extractEmail(String token) {
+        return extractClaim(token, claims -> claims.get("email", String.class));
+    }
+
+    public String extractUserId(String token) {
+        return extractClaim(token, claims -> claims.get("uid", String.class));
+    }
+
+    public String extractVerificationEmail(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(getSignInKey())
                 .build()
@@ -73,8 +73,37 @@ public class JwtService {
             return false;
         }
     }
+
     public String generateRefreshToken(Users user) {
         return buildToken(new HashMap<>(), user, refreshExpiration);
+    }
+
+    public String generateToken(Users user) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("uid", user.getUserId());
+        claims.put("email", user.getEmail());
+        claims.put("role", "ROLE_" + user.getRole().name()); // Ensure correct role format
+        claims.put("isVerified", user.isVerified());
+        claims.put("isActive", user.isActive());
+        return generateToken(claims, user);
+    }
+
+    // Generate token
+    private String generateToken(Map<String, Object> extraClaims, Users user) {
+        return buildToken(extraClaims, user, jwtExpiration);
+    }
+
+    // Generate verification token
+    public String generateVerificationToken(String email) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("email", email);
+        return Jwts.builder()
+                .setClaims(claims)
+                .setSubject(email)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + 24 * 60 * 60 * 1000))  // 24 hours expiry
+                .signWith(getSignInKey(), SignatureAlgorithm.HS256)
+                .compact();
     }
 
     private String buildToken(Map<String, Object> extraClaims, Users user, long expiration) {
@@ -87,9 +116,9 @@ public class JwtService {
                 .compact();
     }
 
-    public boolean isTokenValid(String token, UserDetails user) {
-        final String username = extractUsername(token);
-        return (username.equals(user.getUsername())) && !isTokenExpired(token);
+    public boolean isTokenValid(String token, Users user) {
+        final String hashedID = extractHashedID(token);
+        return (hashedID.equals(user.getHashedID())) && !isTokenExpired(token);
     }
 
     private boolean isTokenExpired(String token) {
@@ -113,8 +142,28 @@ public class JwtService {
                 .getBody();
     }
 
+    // DO NOT TOUCH
     private Key getSignInKey() {
         return Keys.hmacShaKeyFor(secretKey.getBytes());
+    }
+
+    // For testing
+    public Authentication getAuthentication(String token) {
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(getSignInKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+
+        String hashedID = claims.getSubject();
+        String email = claims.get("email", String.class);
+        String role = claims.get("role", String.class);
+        boolean isVerified = claims.get("isVerified", Boolean.class);
+        boolean isActive = claims.get("isActive", Boolean.class);
+
+        // Convert role string to GrantedAuthority
+        List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority(role));
+        return new UsernamePasswordAuthenticationToken(email, null, authorities);
     }
 
     public boolean isTokenRevoked(String token, Set<String> revokedTokens) {

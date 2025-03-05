@@ -1,5 +1,6 @@
 package com.healthy.backend.service;
 
+import com.healthy.backend.entity.Users;
 import com.healthy.backend.repository.RefreshTokenRepository;
 import com.healthy.backend.security.JwtService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -7,7 +8,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
 import org.springframework.stereotype.Service;
 
@@ -16,7 +16,6 @@ import org.springframework.stereotype.Service;
 public class LogoutService implements LogoutHandler {
 
     private final JwtService jwtService;
-
     private final RefreshTokenRepository refreshTokenRepository;
 
     @Override
@@ -28,15 +27,20 @@ public class LogoutService implements LogoutHandler {
         }
 
         String token = authHeader.substring(7);
-        String userId = jwtService.extractUsername(token);
+        String userId = jwtService.extractHashedID(token);
+
+        Users user = authentication != null && authentication.getPrincipal() instanceof Users
+                ? (Users) authentication.getPrincipal()
+                : null;
+
+
+        // Check if token is valid
+        if (user == null || !jwtService.isTokenValid(token, user)) {
+            return;
+        }
 
         // Delete refresh token
         refreshTokenRepository.deleteByUserId(userId);
-
-        // Check if token is valid
-        if (!jwtService.isTokenValid(token, (UserDetails) authentication)) {
-            return;
-        }
 
         // Invalidate the token
         jwtService.invalidateToken(token);
@@ -45,7 +49,6 @@ public class LogoutService implements LogoutHandler {
         if (request.getSession(false) != null) {
             request.getSession().invalidate();
         }
-
 
         try {
             response.setHeader("Clear-Site-Data", "\"auth\""); // Clear authentication data

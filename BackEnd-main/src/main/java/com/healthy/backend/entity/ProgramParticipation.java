@@ -1,5 +1,6 @@
 package com.healthy.backend.entity;
 
+import com.healthy.backend.enums.ParticipationStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -34,7 +35,7 @@ public class ProgramParticipation {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "Status", length = 50, nullable = false)
-    private Status status;
+    private ParticipationStatus status;
 
     @ManyToOne(fetch = FetchType.LAZY,cascade = CascadeType.ALL)
     @JoinColumn(name = "StudentID", referencedColumnName = "StudentID", insertable = false, updatable = false)
@@ -44,7 +45,7 @@ public class ProgramParticipation {
     @JoinColumn(name = "ProgramID", referencedColumnName = "ProgramID", insertable = false, updatable = false)
     private Programs program;
 
-    public ProgramParticipation(String participationID, String studentID, String programID, Status status, LocalDate startDate, LocalDate endDate) {
+    public ProgramParticipation(String participationID, String studentID, String programID, ParticipationStatus status, LocalDate startDate, LocalDate endDate) {
         this.participationID = participationID;
         this.studentID = studentID;
         this.programID = programID;
@@ -53,17 +54,11 @@ public class ProgramParticipation {
         this.endDate = endDate;
     }
 
-    public ProgramParticipation(String participationID, String studentID, String programID, Status status, LocalDate startDate) {
+    public ProgramParticipation(String participationID, String studentID, String programID, ParticipationStatus status, LocalDate startDate) {
         this.participationID = participationID;
         this.studentID = studentID;
         this.programID = programID;
         this.status = status;
         this.startDate = startDate;
-    }
-
-    public enum Status {
-        Joined,
-        Completed,
-        Cancelled
     }
 } 

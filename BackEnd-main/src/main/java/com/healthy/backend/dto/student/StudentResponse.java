@@ -2,6 +2,7 @@ package com.healthy.backend.dto.student;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.healthy.backend.dto.survey.SurveyResultsResponse;
+import com.healthy.backend.dto.user.UsersResponse;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -17,9 +18,10 @@ import java.util.List;
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class StudentResponse {
-    @Schema(example = "S001")
+
+    @Schema(example = "STU001")
     private String studentId;
-    @Schema(example = "US001")
+    @Schema(example = "UID001")
     private String userId;
     @Schema(example = "10")
     private Integer grade;
@@ -49,5 +51,11 @@ public class StudentResponse {
     private LocalDateTime createdAt;
     @Schema(example = "2023-01-02")
     private LocalDateTime updatedAt;
+    @Schema(example = "UsersResponse")
+    private UsersResponse info;
+    @Schema(example = "")
+    private String programStatus;
+    @Schema(example = "")
+    private UsersResponse usersResponse;
 
 }

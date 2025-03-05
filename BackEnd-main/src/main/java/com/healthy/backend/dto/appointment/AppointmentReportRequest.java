@@ -23,7 +23,7 @@ public class AppointmentReportRequest {
     private String appointmentId;
     @Schema(example = "PSY001")
     private String psychologistId;
-    @Schema(example = "S001")
+    @Schema(example = "STU001")
     private String studentId;
     @Schema(example = "0")
     private Integer depressionScore;

@@ -1,6 +1,7 @@
 package com.healthy.backend.dto.timeslot;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.healthy.backend.enums.TimeslotStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,7 +17,7 @@ import java.time.LocalTime;
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class TimeSlotResponse {
-    @Schema(example = "TSPSY00127022500")
+    @Schema(example = "TS00127022500")
     private String timeSlotId;
     @Schema(example = "2023-01-01")
     private LocalDate slotDate;
@@ -25,5 +26,9 @@ public class TimeSlotResponse {
     @Schema(example = "2023-01-01 00:00:00")
     private LocalTime endTime;
     @Schema(example = "Available")
-    private String status;
+    private TimeslotStatus status;
+
+    private int maxCapacity;
+    private int currentBookings;
+    private boolean booked;
 }

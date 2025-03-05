@@ -20,7 +20,7 @@ public class ApplicationConfig {
 
     @Bean
     public UserDetailsService userDetailsService() {
-        return authenticationRepository::findByUsername;
+        return authenticationRepository::findByHashedID;
     }
 
     @Bean

@@ -1,21 +1,13 @@
 package com.healthy.backend.entity;
 
-import com.healthy.backend.entity.Enum.StatusEnum;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
+import com.healthy.backend.enums.AppointmentStatus;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Getter
@@ -39,7 +31,7 @@ public class Appointments {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "Status", length = 20)
-    private StatusEnum status;
+    private AppointmentStatus status;
 
     @Column(name = "StudentNote", columnDefinition = "TEXT")
     private String studentNote;
@@ -47,8 +39,12 @@ public class Appointments {
     @Column(name = "PsychologistNote", columnDefinition = "TEXT")
     private String psychologistNote;
 
-    @Column(name = "Feedback", columnDefinition = "TEXT")
-    private String feedback;
+
+
+    @Column(name = "Rating")
+    private Integer rating;
+
+
 
     @Column(name = "CreatedAt", updatable = false)
     private LocalDateTime createdAt;
@@ -74,11 +70,19 @@ public class Appointments {
     @Column(name = "CheckOutTime")
     private LocalDateTime checkOutTime;
 
+    @OneToMany(mappedBy = "appointment", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Feedback> feedbacks;
+
+
+
+    @OneToMany(mappedBy = "appointment", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Notifications> notifications;
+
     public Appointments() {
-        this.status = StatusEnum.Scheduled;
+        this.status = AppointmentStatus.SCHEDULED;
     }
 
-    public Appointments(String appointmentID, String timeSlotsID, String studentID, String psychologistID, StatusEnum status) {
+    public Appointments(String appointmentID, String timeSlotsID, String studentID, String psychologistID, AppointmentStatus status) {
         this.appointmentID = appointmentID;
         this.timeSlotsID = timeSlotsID;
         this.studentID = studentID;
@@ -88,6 +92,7 @@ public class Appointments {
 
     @PrePersist
     protected void onCreate() {
+
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
     }
@@ -96,11 +101,5 @@ public class Appointments {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
-
-    public enum AppointmentType {
-        Online,
-        Offline
-    }
-
 
 }
