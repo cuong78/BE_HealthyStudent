@@ -2,7 +2,6 @@ package com.healthy.backend.mapper;
 
 import com.healthy.backend.dto.appointment.AppointmentResponse;
 import com.healthy.backend.dto.auth.request.RegisterRequest;
-import com.healthy.backend.dto.programs.ProgramsResponse;
 import com.healthy.backend.dto.psychologist.PsychologistResponse;
 import com.healthy.backend.dto.student.StudentResponse;
 import com.healthy.backend.dto.survey.SurveyResultsResponse;
@@ -94,7 +93,6 @@ public class UserMapper {
             PsychologistResponse psychologistResponse,
             StudentResponse studentResponse,
             List<AppointmentResponse> appointmentResponse,
-            List<ProgramsResponse> programParticipationResponse,
             List<SurveyResultsResponse> surveyResultsResponse,
             List<StudentResponse> children
     ) {
@@ -113,29 +111,12 @@ public class UserMapper {
                 .studentInfo(studentResponse)
                 .children(children)
                 .appointmentsRecord(appointmentResponse)
-                .programsRecord(programParticipationResponse)
                 .surveyResults(surveyResultsResponse)
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())
                 .build();
     }
 
-    // Convert User entity to UserResponse (Student)
-    public Users buildUserEntity(RegisterRequest requestRequest,
-                                 String token, String userId, String password, String hashedID, Role role) {
-        return Users.builder()
-                .userId(userId)
-                .hashedID(hashedID)
-                .passwordHash(password)
-                .fullName(requestRequest.getFullName())
-                .email(requestRequest.getEmail())
-                .phoneNumber(requestRequest.getPhoneNumber())
-                .role(role)
-                .address(requestRequest.getAddress())
-                .gender(Gender.valueOf(requestRequest.getGender()))
-                .verificationToken(token)
-                .build();
-    }
 
     public Users buildUserEntity(RegisterRequest requestRequest,
                                  String token, String userID, String password, String hashedID) {

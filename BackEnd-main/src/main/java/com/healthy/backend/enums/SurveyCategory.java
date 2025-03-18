@@ -1,7 +1,7 @@
 package com.healthy.backend.enums;
 
 public enum SurveyCategory {
-    ANXIETY,
+    STRESSSS,
     DEPRESSION,
-    STRESS
+    ANXIETY
 }

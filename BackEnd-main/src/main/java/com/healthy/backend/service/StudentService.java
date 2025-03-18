@@ -1,7 +1,6 @@
 package com.healthy.backend.service;
 
 import com.healthy.backend.dto.appointment.AppointmentResponse;
-import com.healthy.backend.dto.programs.ProgramsResponse;
 import com.healthy.backend.dto.student.StudentRequest;
 import com.healthy.backend.dto.student.StudentResponse;
 import com.healthy.backend.dto.survey.SurveysResponse;
@@ -10,7 +9,6 @@ import com.healthy.backend.enums.AppointmentStatus;
 import com.healthy.backend.exception.OperationFailedException;
 import com.healthy.backend.exception.ResourceNotFoundException;
 import com.healthy.backend.mapper.AppointmentMapper;
-import com.healthy.backend.mapper.ProgramMapper;
 import com.healthy.backend.mapper.StudentMapper;
 import com.healthy.backend.mapper.SurveyMapper;
 import com.healthy.backend.repository.*;
@@ -22,7 +20,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -32,19 +29,14 @@ public class StudentService {
 
     private final SurveyRepository surveyRepository;
     private final StudentRepository studentRepository;
-    private final ProgramRepository programRepository;
     private final AppointmentRepository appointmentsRepository;
     private final SurveyResultRepository surveyResultRepository;
-    private final ProgramParticipationRepository programParticipationRepository;
 
     private final TokenService tokenService;
 
     private final SurveyMapper surveyMapper;
     private final StudentMapper studentMapper;
-    private final ProgramMapper programMapper;
     private final AppointmentMapper appointmentMapper;
-    private final SurveyQuestionOptionsChoicesRepository surveyQuestionOptionsChoicesRepository;
-    private final RefreshTokenRepository refreshTokenRepository;
     private final SurveyQuestionRepository surveyQuestionRepository;
 
     public boolean isStudentExist(String studentId) {
@@ -63,6 +55,7 @@ public class StudentService {
                 .map(studentMapper::buildStudentResponse)
                 .toList();
     }
+
     public String getStudentIdByUserId(String userId) {
         Students students = studentRepository.findByUserID(userId);
         if (students == null) {
@@ -138,7 +131,7 @@ public class StudentService {
         }
         return surveys.stream()
                 .map(sr -> {
-                            SurveyResult surveyResult = surveyResultRepository.findBySurveyIDAndStudentID(sr.getSurveyID(), studentId);
+                            SurveyResult surveyResult = surveyResultRepository.findBySurveyIDAndStudentID(sr.getSurveyID(), studentId).getLast();
                             return surveyMapper.buildSurveysResponse(
                                     sr,
                                     surveyQuestionRepository.findBySurveyID(sr.getSurveyID()).size(),
@@ -148,40 +141,6 @@ public class StudentService {
                 ).toList();
     }
 
-    public List<ProgramsResponse> getEnrolledPrograms(String studentId, HttpServletRequest request) {
-        String finalStudentId = validateStudentID(request, studentId);
-        if (!tokenService.getRoleID(tokenService.retrieveUser(request)).equals(finalStudentId)
-                && !tokenService.isManager(request)) {
-            throw new OperationFailedException("You don't have permission to view this student programs");
-        }
-        return programParticipationRepository.findByStudentID(studentId).stream()
-                .map(p -> programMapper.buildProgramResponse(
-                        programRepository
-                                .findById(p.getProgram().getProgramID())
-                                .orElseThrow(() -> new ResourceNotFoundException("Program not found")),
-                        getStudentsByProgram(p.getProgram().getProgramID()).size()
-                )).toList();
-    }
-
-    public List<ProgramsResponse> getCompletedPrograms(String studentId, HttpServletRequest request) {
-        String finalStudentId = validateStudentID(request, studentId);
-        if (!tokenService.getRoleID(tokenService.retrieveUser(request)).equals(finalStudentId)
-                && !tokenService.isManager(request)) {
-            throw new OperationFailedException("You don't have permission to view this student programs");
-        }
-        List<ProgramParticipation> participation = programParticipationRepository.findByStudentID(studentId);
-        if (participation.isEmpty()) {
-            throw new ResourceNotFoundException("No enrolled programs found");
-        }
-        return participation.stream()
-                .map(p -> programMapper.buildProgramResponse(
-                        programRepository
-                                .findById(p.getProgram().getProgramID())
-                                .orElseThrow(() -> new ResourceNotFoundException("Program not found")),
-                        getStudentsByProgram(p.getProgram().getProgramID()).size()
-                ))
-                .toList();
-    }
 
     public List<AppointmentResponse> getAppointments(String studentId, HttpServletRequest request) {
         String finalStudentId = validateStudentID(request, studentId);
@@ -215,16 +174,7 @@ public class StudentService {
                 .map(appointmentMapper::buildAppointmentResponse).toList();
     }
 
-    private List<StudentResponse> getStudentsByProgram(String programId) {
-        List<String> studentIDs = programParticipationRepository.findStudentIDsByProgramID(programId);
-        if (studentIDs.isEmpty()) {
-            return new ArrayList<>();
-        }
-        return studentIDs.stream()
-                .map(studentRepository::findByStudentID)
-                .map(studentMapper::buildStudentResponse)
-                .toList();
-    }
+
 
     private String validateStudentID(HttpServletRequest request, String studentId) {
         if (studentId == null) {
@@ -235,4 +185,6 @@ public class StudentService {
         }
         return studentId;
     }
+
+
 }

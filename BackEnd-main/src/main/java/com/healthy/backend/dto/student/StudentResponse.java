@@ -9,6 +9,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -40,11 +41,11 @@ public class StudentResponse {
     @Schema(example = "Male")
     private String gender;
     @Schema(example = "0")
-    private Integer depressionScore;
+    private BigDecimal depressionScore;
     @Schema(example = "0")
-    private Integer anxietyScore;
+    private BigDecimal anxietyScore;
     @Schema(example = "0")
-    private Integer stressScore;
+    private BigDecimal stressScore;
     @Schema(examples = {"General", "Behavior", "Academic", "Emotional"} )
     private List<SurveyResultsResponse> surveyResults;
     @Schema(example = "2023-01-01")

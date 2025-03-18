@@ -50,9 +50,6 @@ public class Notifications {
     @Column(name = "ProgramID", length = 36)
     private String programID;
 
-    @ManyToOne
-    @JoinColumn(name = "ProgramID", insertable = false, updatable = false)
-    private Programs programs;
 
     @Column(name = "SurveyID", length = 36)
     private String surveyID;

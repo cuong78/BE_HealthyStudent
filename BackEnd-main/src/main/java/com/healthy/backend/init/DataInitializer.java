@@ -1,6 +1,7 @@
 package com.healthy.backend.init;
 
 import com.healthy.backend.dto.auth.request.RegisterRequest;
+
 import com.healthy.backend.entity.*;
 import com.healthy.backend.enums.*;
 import com.healthy.backend.repository.*;
@@ -12,11 +13,9 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
+import java.math.BigDecimal;
 import java.time.LocalTime;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -29,13 +28,10 @@ public class DataInitializer implements CommandLineRunner {
     private final StudentRepository studentRepository;
     private final DepartmentRepository departmentRepository;
     private final PsychologistRepository psychologistRepository;
-    private final ProgramScheduleRepository programScheduleRepository;
-    private final TimeSlotRepository timeSlotRepository;
-    private final TagsRepository tagsRepository;
-    private final ProgramRepository programRepository;
+
     private final UserLogRepository userLogRepository;
-    private final ArticleRepository articleRepository;
     private final AppointmentRepository appointmentRepository;
+    private final DefaultTimeSlotRepository defaultTimeSlotRepository;
     private final NotificationRepository notificationRepository;
     private final CategoriesRepository categoriesRepository;
     private final SurveyQuestionOptionsRepository surveyQuestionOptionsRepository;
@@ -56,14 +52,9 @@ public class DataInitializer implements CommandLineRunner {
         System.out.println("Departments initialized");
         initializePsychologists();
         System.out.println("Psychologists initialized");
-//
-//        System.out.println("TimeSlots initialize");
-        initializeTags();
-        System.out.println("Tags initialized");
-        initializePrograms();
-        System.out.println("Programs initialized");
-        initializeProgramSchedule();
-        System.out.println("Program Schedule initialized");
+        initializeDefaultSlots();
+        System.out.println("DefaultTimeSlots initialize");
+
         initializeCategories();
         System.out.println("Categories initialized");
         initializeSurveys();
@@ -80,8 +71,6 @@ public class DataInitializer implements CommandLineRunner {
         System.out.println("Survey Results Choices initialized");
         initializeLogs();
         System.out.println("Logs initialized");
-        initializeArticles();
-        System.out.println("Articles initialized");
         initializeNotifications();
         System.out.println("Notifications initialized");
     }
@@ -113,9 +102,9 @@ public class DataInitializer implements CommandLineRunner {
         parentRepository.save(new Parents("PRT002", userRepository.findByEmail("parent2@example.com").getUserId()));
 
         // Initialize Students
-        studentRepository.save(new Students("STU001", userRepository.findByEmail("student@example.com").getUserId(), parentRepository.findById("PRT001").get().getParentID(), 10, "A", "Example High School", 0, 0, 0));
-        studentRepository.save(new Students("STU002", userRepository.findByEmail("student2@example.com").getUserId(), parentRepository.findById("PRT002").get().getParentID(), 9, "B", "Example High School", 0, 0, 0));
-        studentRepository.save(new Students("STU003", userRepository.findByEmail("student3@example.com").getUserId(), parentRepository.findById("PRT001").get().getParentID(), 9, "A", "Example High School", 0, 0, 0));
+        studentRepository.save(new Students("STU001", userRepository.findByEmail("student@example.com").getUserId(), parentRepository.findById("PRT001").get().getParentID(), 10, "A", "Example High School", BigDecimal.valueOf(0.0), BigDecimal.valueOf(0.0), BigDecimal.valueOf(0.0)));
+        studentRepository.save(new Students("STU002", userRepository.findByEmail("student2@example.com").getUserId(), parentRepository.findById("PRT002").get().getParentID(), 9, "B", "Example High School", BigDecimal.valueOf(0.0), BigDecimal.valueOf(0.0), BigDecimal.valueOf(0.0)));
+        studentRepository.save(new Students("STU003", userRepository.findByEmail("student3@example.com").getUserId(), parentRepository.findById("PRT001").get().getParentID(), 9, "A", "Example High School", BigDecimal.valueOf(0.0), BigDecimal.valueOf(0.0), BigDecimal.valueOf(0.0)));
 
     }
 
@@ -144,92 +133,41 @@ public class DataInitializer implements CommandLineRunner {
 
     }
 
+    private void initializeDefaultSlots() {
+        if (defaultTimeSlotRepository.count() == 0) {
+            List<DefaultTimeSlot> slots = new ArrayList<>();
 
+            // Morning slots 8:00-11:00
+            LocalTime time = LocalTime.of(8, 0);
+            for (int i = 0; time.isBefore(LocalTime.of(11, 0)); i++) {
+                slots.add(new DefaultTimeSlot(
+                        "MORNING-" + String.format("%02d", i),
+                        time,
+                        time.plusMinutes(30),
+                        "Morning"
+                ));
+                time = time.plusMinutes(30);
+            }
 
-    private void initializeTags() {
-        List<Tags> tags = Arrays.stream(ProgramTags.values())
-                .map(tag -> new Tags(String.format("TAG%03d", tag.ordinal() + 1), tag))
-                .collect(Collectors.toList());
-        tagsRepository.saveAll(tags);
+            // Afternoon slots 13:00-17:00
+            time = LocalTime.of(13, 0);
+            for (int i = 0; time.isBefore(LocalTime.of(17, 0)); i++) {
+                slots.add(new DefaultTimeSlot(
+                        "AFTERNOON-" + String.format("%02d", i),
+                        time,
+                        time.plusMinutes(30),
+                        "Afternoon"
+                ));
+                time = time.plusMinutes(30);
+            }
+
+            defaultTimeSlotRepository.saveAll(slots);
+        }
     }
 
-    private void initializePrograms() {
-        programRepository.save(new Programs("PRG001", "Stress Management",
-                "Program to help manage stress", 20, 4, ProgramStatus.ACTIVE,
-                departmentRepository.findById("DPT006").orElseThrow(),
-                psychologistRepository.findById("PSY001").orElseThrow(),
-                new HashSet<Tags>(tagsRepository.findAllById(List.of("TAG001", "TAG002", "TAG003"))),
-                LocalDate.parse("2025-02-23"), "https://example.com/meeting1", ProgramType.ONLINE));
-        programRepository.save(new Programs("PRG002", "Anxiety Support Group",
-                "Support group for individuals with anxiety", 15, 6, ProgramStatus.ACTIVE,
-                departmentRepository.findById("DPT006").orElseThrow(),
-                psychologistRepository.findById("PSY002").orElseThrow(),
-                new HashSet<Tags>(tagsRepository.findAllById(List.of("TAG004", "TAG005", "TAG006"))),
-                LocalDate.parse("2025-02-25"), "https://example.com/meeting2", ProgramType.OFFLINE));
-        programRepository.save(new Programs("PRG003", "Mindfulness Workshop",
-                "Workshop on mindfulness techniques", 25, 3, ProgramStatus.ACTIVE,
-                departmentRepository.findById("DPT003").orElseThrow(),
-                psychologistRepository.findById("PSY001").orElseThrow(),
-                new HashSet<Tags>(tagsRepository.findAllById(List.of("TAG007", "TAG008", "TAG009"))),
-                LocalDate.parse("2025-02-28"), "https://example.com/meeting3", ProgramType.ONLINE));
-        programRepository.save(new Programs("PRG004", "Depression Counseling",
-                "Counseling for individuals with depression", 30, 2, ProgramStatus.ACTIVE,
-                departmentRepository.findById("DPT007").orElseThrow(),
-                psychologistRepository.findById("PSY001").orElseThrow(),
-                new HashSet<Tags>(tagsRepository.findAllById(List.of("TAG010", "TAG011", "TAG012"))),
-                LocalDate.parse("2025-03-01"), "https://example.com/meeting4", ProgramType.ONLINE));
-        programRepository.save(new Programs("PRG005", "Depression Counseling",
-                "Counseling for individuals with depression", 30, 2, ProgramStatus.ACTIVE,
-                departmentRepository.findById("DPT007").orElseThrow(),
-                psychologistRepository.findById("PSY002").orElseThrow(),
-                new HashSet<Tags>(tagsRepository.findAllById(List.of("TAG010", "TAG011", "TAG012"))),
-                LocalDate.parse("2025-03-12"), "https://example.com/meeting4", ProgramType.ONLINE));
-        programRepository.save(new Programs("PRG006", "Depression Counseling",
-                "Counseling for individuals with depression", 30, 2, ProgramStatus.ACTIVE,
-                departmentRepository.findById("DPT007").orElseThrow(),
-                psychologistRepository.findById("PSY001").orElseThrow(),
-                new HashSet<Tags>(tagsRepository.findAllById(List.of("TAG010", "TAG011", "TAG012"))),
-                LocalDate.parse("2025-03-22"), "https://example.com/meeting4", ProgramType.ONLINE));
-        programRepository.save(new Programs("PRG007", "Depression Counseling",
-                "Counseling for individuals with depression", 30, 2, ProgramStatus.ACTIVE,
-                departmentRepository.findById("DPT007").orElseThrow(),
-                psychologistRepository.findById("PSY001").orElseThrow(),
-                new HashSet<Tags>(tagsRepository.findAllById(List.of("TAG010", "TAG011", "TAG012"))),
-                LocalDate.parse("2025-03-28"), "https://example.com/meeting4", ProgramType.ONLINE));
-        programRepository.save(new Programs("PRG008", "Depression Counseling",
-                "Counseling for individuals with depression", 30, 2, ProgramStatus.ACTIVE,
-                departmentRepository.findById("DPT007").orElseThrow(),
-                psychologistRepository.findById("PSY002").orElseThrow(),
-                new HashSet<Tags>(tagsRepository.findAllById(List.of("TAG010", "TAG011", "TAG012"))),
-                LocalDate.parse("2025-04-20"), "https://example.com/meeting4", ProgramType.ONLINE));
-        programRepository.save(new Programs("PRG009", "Depression Counseling",
-                "Counseling for individuals with depression", 30, 2, ProgramStatus.ACTIVE,
-                departmentRepository.findById("DPT007").orElseThrow(),
-                psychologistRepository.findById("PSY001").orElseThrow(),
-                new HashSet<Tags>(tagsRepository.findAllById(List.of("TAG010", "TAG011", "TAG012"))),
-                LocalDate.parse("2025-04-22"), "https://example.com/meeting4", ProgramType.ONLINE));
-        programRepository.save(new Programs("PRG010", "Depression Counseling",
-                "Counseling for individuals with depression", 30, 2, ProgramStatus.ACTIVE,
-                departmentRepository.findById("DPT007").orElseThrow(),
-                psychologistRepository.findById("PSY001").orElseThrow(),
-                new HashSet<Tags>(tagsRepository.findAllById(List.of("TAG010", "TAG011", "TAG012"))),
-                LocalDate.parse("2025-04-28"), "https://example.com/meeting4", ProgramType.ONLINE));
 
-    }
 
-    private void initializeProgramSchedule() {
-        // Initialize Program Schedule
-        programScheduleRepository.save(new ProgramSchedule(__.generateProgramScheduleID(), "PRG001", "Monday", LocalTime.parse("10:00:00"), LocalTime.parse("11:30:00")));
-        programScheduleRepository.save(new ProgramSchedule(__.generateProgramScheduleID(), "PRG002", "Tuesday", LocalTime.parse("14:00:00"), LocalTime.parse("15:30:00")));
-        programScheduleRepository.save(new ProgramSchedule(__.generateProgramScheduleID(), "PRG003", "Wednesday", LocalTime.parse("09:00:00"), LocalTime.parse("10:30:00")));
-        programScheduleRepository.save(new ProgramSchedule(__.generateProgramScheduleID(), "PRG004", "Friday", LocalTime.parse("09:00:00"), LocalTime.parse("10:30:00")));
-        programScheduleRepository.save(new ProgramSchedule(__.generateProgramScheduleID(), "PRG005", "Saturday", LocalTime.parse("09:00:00"), LocalTime.parse("10:30:00")));
-        programScheduleRepository.save(new ProgramSchedule(__.generateProgramScheduleID(), "PRG006", "Wednesday", LocalTime.parse("07:00:00"), LocalTime.parse("10:30:00")));
-        programScheduleRepository.save(new ProgramSchedule(__.generateProgramScheduleID(), "PRG007", "Tuesday", LocalTime.parse("08:30:00"), LocalTime.parse("10:30:00")));
-        programScheduleRepository.save(new ProgramSchedule(__.generateProgramScheduleID(), "PRG008", "Monday", LocalTime.parse("07:00:00"), LocalTime.parse("10:30:00")));
-        programScheduleRepository.save(new ProgramSchedule(__.generateProgramScheduleID(), "PRG009", "Tuesday", LocalTime.parse("09:30:00"), LocalTime.parse("10:30:00")));
-        programScheduleRepository.save(new ProgramSchedule(__.generateProgramScheduleID(), "PRG010", "Monday", LocalTime.parse("09:30:00"), LocalTime.parse("10:30:00")));
-    }
+
 
     private void initializeCategories() {
         List<Categories> categories = Arrays.stream(SurveyCategory.values())
@@ -281,266 +219,272 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private void initializeAnswers() {
+
         surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO001", "SQR001", "Never", 0));
         surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO002", "SQR001", "Almost Never", 1));
         surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO003", "SQR001", "Sometimes", 2));
         surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO004", "SQR001", "Fairly Often", 3));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO005", "SQR001", "Very Often", 4));
 
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO005", "SQR002", "Never", 0));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO006", "SQR002", "Almost Never", 1));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO007", "SQR002", "Sometimes", 2));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO008", "SQR002", "Fairly Often", 3));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO006", "SQR002", "Never", 0));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO007", "SQR002", "Almost Never", 1));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO008", "SQR002", "Sometimes", 2));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO009", "SQR002", "Fairly Often", 3));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO010", "SQR002", "Very Often", 4));
 
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO009", "SQR003", "Never", 0));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO010", "SQR003", "Almost Never", 1));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO011", "SQR003", "Sometimes", 2));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO012", "SQR003", "Fairly Often", 3));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO011", "SQR003", "Never", 0));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO012", "SQR003", "Almost Never", 1));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO013", "SQR003", "Sometimes", 2));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO014", "SQR003", "Fairly Often", 3));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO015", "SQR003", "Very Often", 4));
 
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO016", "SQR004", "Never", 4));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO017", "SQR004", "Almost Never", 3));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO018", "SQR004", "Sometimes", 2));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO019", "SQR004", "Fairly Often", 1));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO020", "SQR004", "Very Often", 0));
 
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO013", "SQR004", "Never", 0));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO014", "SQR004", "Almost Never", 1));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO015", "SQR004", "Sometimes", 2));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO016", "SQR004", "Fairly Often", 3));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO021", "SQR005", "Never", 4));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO022", "SQR005", "Almost Never", 3));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO023", "SQR005", "Sometimes", 2));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO024", "SQR005", "Fairly Often", 1));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO025", "SQR005", "Very Often", 0));
 
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO017", "SQR005", "Never", 0));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO018", "SQR005", "Almost Never", 1));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO019", "SQR005", "Sometimes", 2));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO020", "SQR005", "Fairly Often", 3));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO026", "SQR006", "Never", 0));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO027", "SQR006", "Almost Never", 1));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO028", "SQR006", "Sometimes", 2));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO029", "SQR006", "Fairly Often", 3));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO030", "SQR006", "Very Often", 4));
 
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO021", "SQR006", "Never", 0));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO022", "SQR006", "Almost Never", 1));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO023", "SQR006", "Sometimes", 2));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO024", "SQR006", "Fairly Often", 3));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO031", "SQR007", "Never", 4));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO032", "SQR007", "Almost Never", 3));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO033", "SQR007", "Sometimes", 2));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO034", "SQR007", "Fairly Often", 1));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO035", "SQR007", "Very Often", 0));
 
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO025", "SQR007", "Never", 0));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO026", "SQR007", "Almost Never", 1));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO027", "SQR007", "Sometimes", 2));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO028", "SQR007", "Fairly Often", 3));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO036", "SQR008", "Never", 4));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO037", "SQR008", "Almost Never", 3));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO038", "SQR008", "Sometimes", 2));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO039", "SQR008", "Fairly Often", 1));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO040", "SQR008", "Very Often", 0));
 
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO029", "SQR008", "Never", 0));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO030", "SQR008", "Almost Never", 1));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO031", "SQR008", "Sometimes", 2));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO032", "SQR008", "Fairly Often", 3));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO041", "SQR009", "Never", 0));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO042", "SQR009", "Almost Never", 1));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO043", "SQR009", "Sometimes", 2));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO044", "SQR009", "Fairly Often", 3));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO045", "SQR009", "Very Often", 4));
 
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO033", "SQR009", "Never", 0));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO034", "SQR009", "Almost Never", 1));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO035", "SQR009", "Sometimes", 2));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO036", "SQR009", "Fairly Often", 3));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO046", "SQR010", "Never", 0));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO047", "SQR010", "Almost Never", 1));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO048", "SQR010", "Sometimes", 2));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO049", "SQR010", "Fairly Often", 3));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO050", "SQR010", "Very Often", 4));
 
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO037", "SQR010", "Never", 0));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO038", "SQR010", "Almost Never", 1));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO039", "SQR010", "Sometimes", 2));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO040", "SQR010", "Fairly Often", 3));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO051", "SQR011", "Not at all", 0));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO052", "SQR011", "Several days", 1));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO053", "SQR011", "More than half the days", 2));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO054", "SQR011", "Nearly every day", 3));
 
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO055", "SQR012", "Not at all", 0));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO056", "SQR012", "Several days", 1));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO057", "SQR012", "More than half the days", 2));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO058", "SQR012", "Nearly every day", 3));
 
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO041", "SQR011", "Not at all", 0));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO042", "SQR011", "Several days", 1));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO043", "SQR011", "More than half the days", 2));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO044", "SQR011", "Nearly every day", 3));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO059", "SQR013", "Not at all", 0));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO060", "SQR013", "Several days", 1));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO061", "SQR013", "More than half the days", 2));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO062", "SQR013", "Nearly every day", 3));
 
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO045", "SQR012", "Not at all", 0));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO046", "SQR012", "Several days", 1));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO047", "SQR012", "More than half the days", 2));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO048", "SQR012", "Nearly every day", 3));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO063", "SQR014", "Not at all", 0));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO064", "SQR014", "Several days", 1));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO065", "SQR014", "More than half the days", 2));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO066", "SQR014", "Nearly every day", 3));
 
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO049", "SQR013", "Not at all", 0));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO050", "SQR013", "Several days", 1));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO051", "SQR013", "More than half the days", 2));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO052", "SQR013", "Nearly every day", 3));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO067", "SQR015", "Not at all", 0));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO068", "SQR015", "Several days", 1));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO069", "SQR015", "More than half the days", 2));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO070", "SQR015", "Nearly every day", 3));
 
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO053", "SQR014", "Not at all", 0));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO054", "SQR014", "Several days", 1));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO055", "SQR014", "More than half the days", 2));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO056", "SQR014", "Nearly every day", 3));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO071", "SQR016", "Not at all", 0));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO072", "SQR016", "Several days", 1));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO073", "SQR016", "More than half the days", 2));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO074", "SQR016", "Nearly every day", 3));
 
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO057", "SQR015", "Not at all", 0));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO058", "SQR015", "Several days", 1));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO059", "SQR015", "More than half the days", 2));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO060", "SQR015", "Nearly every day", 3));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO075", "SQR017", "Not at all", 0));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO076", "SQR017", "Several days", 1));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO077", "SQR017", "More than half the days", 2));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO078", "SQR017", "Nearly every day", 3));
 
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO061", "SQR016", "Not at all", 0));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO062", "SQR016", "Several days", 1));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO063", "SQR016", "More than half the days", 2));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO064", "SQR016", "Nearly every day", 3));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO079", "SQR018", "Not at all", 0));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO080", "SQR018", "Several days", 1));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO081", "SQR018", "More than half the days", 2));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO082", "SQR018", "Nearly every day", 3));
 
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO065", "SQR017", "Not at all", 0));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO066", "SQR017", "Several days", 1));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO067", "SQR017", "More than half the days", 2));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO068", "SQR017", "Nearly every day", 3));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO083", "SQR019", "Not at all", 0));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO084", "SQR019", "Several days", 1));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO085", "SQR019", "More than half the days", 2));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO086", "SQR019", "Nearly every day", 3));
 
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO069", "SQR018", "Not at all", 0));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO070", "SQR018", "Several days", 1));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO071", "SQR018", "More than half the days", 2));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO072", "SQR018", "Nearly every day", 3));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO087", "SQR020", "Not at all", 0));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO088", "SQR020", "Several days", 1));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO089", "SQR020", "More than half the days", 2));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO090", "SQR020", "Nearly every day", 3));
 
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO091", "SQR021", "Not at all", 0));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO092", "SQR021", "Several days", 1));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO093", "SQR021", "More than half the days", 2));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO094", "SQR021", "Nearly every day", 3));
 
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO073", "SQR019", "Not at all", 0));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO074", "SQR019", "Several days", 1));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO075", "SQR019", "More than half the days", 2));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO076", "SQR019", "Nearly every day", 3));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO095", "SQR022", "Not at all", 0));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO096", "SQR022", "Several days", 1));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO097", "SQR022", "More than half the days", 2));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO098", "SQR022", "Nearly every day", 3));
 
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO077", "SQR020", "Not at all", 0));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO078", "SQR020", "Several days", 1));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO079", "SQR020", "More than half the days", 2));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO080", "SQR020", "Nearly every day", 3));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO099", "SQR023", "Not at all", 0));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO100", "SQR023", "Several days", 1));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO101", "SQR023", "More than half the days", 2));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO102", "SQR023", "Nearly every day", 3));
 
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO081", "SQR021", "Not at all", 0));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO082", "SQR021", "Several days", 1));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO083", "SQR021", "More than half the days", 2));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO084", "SQR021", "Nearly every day", 3));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO103", "SQR024", "Not at all", 0));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO104", "SQR024", "Several days", 1));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO105", "SQR024", "More than half the days", 2));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO106", "SQR024", "Nearly every day", 3));
 
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO085", "SQR022", "Not at all", 0));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO086", "SQR022", "Several days", 1));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO087", "SQR022", "More than half the days", 2));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO088", "SQR022", "Nearly every day", 3));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO107", "SQR025", "Not at all", 0));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO108", "SQR025", "Several days", 1));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO109", "SQR025", "More than half the days", 2));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO110", "SQR025", "Nearly every day", 3));
 
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO089", "SQR023", "Not at all", 0));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO090", "SQR023", "Several days", 1));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO091", "SQR023", "More than half the days", 2));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO092", "SQR023", "Nearly every day", 3));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO111", "SQR026", "Not at all", 0));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO112", "SQR026", "Several days", 1));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO113", "SQR026", "More than half the days", 2));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO114", "SQR026", "Nearly every day", 3));
 
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO093", "SQR024", "Not at all", 0));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO094", "SQR024", "Several days", 1));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO095", "SQR024", "More than half the days", 2));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO096", "SQR024", "Nearly every day", 3));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO115", "SQR027", "Not at all", 0));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO116", "SQR027", "Several days", 1));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO117", "SQR027", "More than half the days", 2));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO118", "SQR027", "Nearly every day", 3));
 
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO097", "SQR025", "Not at all", 0));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO098", "SQR025", "Several days", 1));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO099", "SQR025", "More than half the days", 2));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO100", "SQR025", "Nearly every day", 3));
-
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO101", "SQR026", "Not at all", 0));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO102", "SQR026", "Several days", 1));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO103", "SQR026", "More than half the days", 2));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO104", "SQR026", "Nearly every day", 3));
-
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO105", "SQR027", "Not at all", 0));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO106", "SQR027", "Several days", 1));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO107", "SQR027", "More than half the days", 2));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO108", "SQR027", "Nearly every day", 3));
-
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO109", "SQR028", "Not at all", 0));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO110", "SQR028", "Several days", 1));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO111", "SQR028", "More than half the days", 2));
-        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO112", "SQR028", "Nearly every day", 3));
-
-
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO119", "SQR028", "Not at all", 0));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO120", "SQR028", "Several days", 1));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO121", "SQR028", "More than half the days", 2));
+        surveyQuestionOptionsRepository.save(new SurveyQuestionOptions("SQO122", "SQR028", "Nearly every day", 3));
 
     }
 
     private void initializeSurveyResults() {
         surveyResultRepository.save(new SurveyResult("SRS001", "SUV001", "STU001"));
-        surveyResultRepository.save(new SurveyResult("SRS002", "SUV002", "STU001"));
-        surveyResultRepository.save(new SurveyResult("SRS003", "SUV003", "STU001"));
+        // surveyResultRepository.save(new SurveyResult("SRS002", "SUV002", "STU001"));
+        // surveyResultRepository.save(new SurveyResult("SRS003", "SUV003", "STU001"));
 
-        surveyResultRepository.save(new SurveyResult("SRS004", "SUV001", "STU002"));
-        surveyResultRepository.save(new SurveyResult("SRS005", "SUV002", "STU002"));
-        surveyResultRepository.save(new SurveyResult("SRS006", "SUV003", "STU002"));
+        // surveyResultRepository.save(new SurveyResult("SRS004", "SUV001", "STU002"));
+        // surveyResultRepository.save(new SurveyResult("SRS005", "SUV002", "STU002"));
+        // surveyResultRepository.save(new SurveyResult("SRS006", "SUV003", "STU002"));
 
-        surveyResultRepository.save(new SurveyResult("SRS007", "SUV001", "STU003"));
-        surveyResultRepository.save(new SurveyResult("SRS008", "SUV002", "STU003"));
-        surveyResultRepository.save(new SurveyResult("SRS009", "SUV003", "STU003"));
+        // surveyResultRepository.save(new SurveyResult("SRS007", "SUV001", "STU003"));
+        // surveyResultRepository.save(new SurveyResult("SRS008", "SUV002", "STU003"));
+        // surveyResultRepository.save(new SurveyResult("SRS009", "SUV003", "STU003"));
     }
 
     private void initializeSurveyResultsChoices() {
         surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS001", "SQR001", "SQO002"));
         surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS001", "SQR002", "SQO006"));
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS001", "SQR003", "SQO010"));
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS001", "SQR004", "SQO014"));
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS001", "SQR005", "SQO018"));
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS001", "SQR006", "SQO022"));
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS001", "SQR007", "SQO026"));
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS001", "SQR008", "SQO030"));
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS001", "SQR009", "SQO034"));
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS001", "SQR010", "SQO038"));
+        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS001", "SQR003", "SQO012"));
+        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS001", "SQR004", "SQO017"));
+        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS001", "SQR005", "SQO021"));
+        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS001", "SQR006", "SQO026"));
+        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS001", "SQR007", "SQO031"));
+        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS001", "SQR008", "SQO036"));
+        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS001", "SQR009", "SQO041"));
+        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS001", "SQR010", "SQO046"));
 
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS002", "SQR011", "SQO042"));
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS002", "SQR012", "SQO046"));
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS002", "SQR013", "SQO050"));
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS002", "SQR014", "SQO054"));
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS002", "SQR015", "SQO058"));
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS002", "SQR016", "SQO062"));
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS002", "SQR017", "SQO066"));
-
-
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS003", "SQR018", "SQO070"));
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS003", "SQR019", "SQO074"));
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS003", "SQR020", "SQO078"));
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS003", "SQR021", "SQO082"));
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS003", "SQR022", "SQO086"));
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS003", "SQR023", "SQO090"));
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS003", "SQR024", "SQO094"));
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS003", "SQR025", "SQO098"));
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS003", "SQR026", "SQO102"));
+        // surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS002", "SQR011", "SQO051"));
+        // surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS002", "SQR012", "SQO055"));
+        // surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS002", "SQR013", "SQO059"));
+        // surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS002", "SQR014", "SQO063"));
+        // surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS002", "SQR015", "SQO067"));
+        // surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS002", "SQR016", "SQO071"));
+        // surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS002", "SQR017", "SQO074"));
 
 
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS004", "SQR001", "SQO001"));
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS004", "SQR002", "SQO005"));
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS004", "SQR003", "SQO009"));
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS004", "SQR004", "SQO013"));
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS004", "SQR005", "SQO017"));
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS004", "SQR006", "SQO021"));
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS004", "SQR007", "SQO025"));
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS004", "SQR008", "SQO029"));
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS004", "SQR009", "SQO033"));
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS004", "SQR010", "SQO037"));
-
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS005", "SQR011", "SQO041"));
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS005", "SQR012", "SQO045"));
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS005", "SQR013", "SQO049"));
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS005", "SQR014", "SQO053"));
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS005", "SQR015", "SQO057"));
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS005", "SQR016", "SQO061"));
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS005", "SQR017", "SQO065"));
-
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS006", "SQR018", "SQO069"));
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS006", "SQR019", "SQO073"));
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS006", "SQR020", "SQO077"));
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS006", "SQR021", "SQO081"));
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS006", "SQR022", "SQO085"));
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS006", "SQR023", "SQO089"));
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS006", "SQR024", "SQO093"));
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS006", "SQR025", "SQO097"));
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS006", "SQR026", "SQO101"));
+        // surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS003", "SQR018", "SQO078"));
+        // surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS003", "SQR019", "SQO082"));
+        // surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS003", "SQR020", "SQO086"));
+        // surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS003", "SQR021", "SQO090"));
+        // surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS003", "SQR022", "SQO094"));
+        // surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS003", "SQR023", "SQO098"));
+        // surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS003", "SQR024", "SQO102"));
+        // surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS003", "SQR025", "SQO106"));
+        // surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS003", "SQR026", "SQO108"));
 
 
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS007", "SQR001", "SQO003"));
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS007", "SQR002", "SQO007"));
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS007", "SQR003", "SQO011"));
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS007", "SQR004", "SQO015"));
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS007", "SQR005", "SQO019"));
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS007", "SQR006", "SQO023"));
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS007", "SQR007", "SQO027"));
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS007", "SQR008", "SQO031"));
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS007", "SQR009", "SQO035"));
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS007", "SQR010", "SQO039"));
+        // surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS004", "SQR001", "SQO001"));
+        // surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS004", "SQR002", "SQO005"));
+        // surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS004", "SQR003", "SQO009"));
+        // surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS004", "SQR004", "SQO013"));
+        // surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS004", "SQR005", "SQO017"));
+        // surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS004", "SQR006", "SQO021"));
+        // surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS004", "SQR007", "SQO025"));
+        // surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS004", "SQR008", "SQO029"));
+        // surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS004", "SQR009", "SQO033"));
+        // surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS004", "SQR010", "SQO037"));
+
+        // surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS005", "SQR011", "SQO041"));
+        // surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS005", "SQR012", "SQO045"));
+        // surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS005", "SQR013", "SQO049"));
+        // surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS005", "SQR014", "SQO053"));
+        // surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS005", "SQR015", "SQO057"));
+        // surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS005", "SQR016", "SQO061"));
+        // surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS005", "SQR017", "SQO065"));
+
+        // surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS006", "SQR018", "SQO069"));
+        // surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS006", "SQR019", "SQO073"));
+        // surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS006", "SQR020", "SQO077"));
+        // surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS006", "SQR021", "SQO081"));
+        // surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS006", "SQR022", "SQO085"));
+        // surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS006", "SQR023", "SQO089"));
+        // surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS006", "SQR024", "SQO093"));
+        // surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS006", "SQR025", "SQO097"));
+        // surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS006", "SQR026", "SQO101"));
 
 
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS008", "SQR011", "SQO043"));
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS008", "SQR012", "SQO047"));
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS008", "SQR013", "SQO051"));
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS008", "SQR014", "SQO055"));
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS008", "SQR015", "SQO059"));
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS008", "SQR016", "SQO063"));
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS008", "SQR017", "SQO067"));
+        // surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS007", "SQR001", "SQO003"));
+        // surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS007", "SQR002", "SQO007"));
+        // surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS007", "SQR003", "SQO011"));
+        // surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS007", "SQR004", "SQO015"));
+        // surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS007", "SQR005", "SQO019"));
+        // surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS007", "SQR006", "SQO023"));
+        // surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS007", "SQR007", "SQO027"));
+        // surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS007", "SQR008", "SQO031"));
+        // surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS007", "SQR009", "SQO035"));
+        // surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS007", "SQR010", "SQO039"));
 
 
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS009", "SQR018", "SQO071"));
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS009", "SQR019", "SQO075"));
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS009", "SQR020", "SQO079"));
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS009", "SQR021", "SQO083"));
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS009", "SQR022", "SQO087"));
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS009", "SQR023", "SQO091"));
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS009", "SQR024", "SQO095"));
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS009", "SQR025", "SQO099"));
-        surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS009", "SQR026", "SQO103"));
+        // surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS008", "SQR011", "SQO043"));
+        // surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS008", "SQR012", "SQO047"));
+        // surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS008", "SQR013", "SQO051"));
+        // surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS008", "SQR014", "SQO055"));
+        // surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS008", "SQR015", "SQO059"));
+        // surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS008", "SQR016", "SQO063"));
+        // surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS008", "SQR017", "SQO067"));
+
+
+        // surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS009", "SQR018", "SQO071"));
+        // surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS009", "SQR019", "SQO075"));
+        // surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS009", "SQR020", "SQO079"));
+        // surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS009", "SQR021", "SQO083"));
+        // surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS009", "SQR022", "SQO087"));
+        // surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS009", "SQR023", "SQO091"));
+        // surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS009", "SQR024", "SQO095"));
+        // surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS009", "SQR025", "SQO099"));
+        // surveyQuestionOptionsChoicesRepository.save(new SurveyQuestionOptionsChoices("SRS009", "SQR026", "SQO103"));
 
     }
 
     private void initScore() {
         List<SurveyResult> surveyResults = surveyResultRepository.findAll();
         surveyResults.forEach(
-                result ->{
+                result -> {
                     result.setMaxScore(surveyService.calculateMaxScore(result.getSurvey()));
                     result.setResult(surveyService.calculateTotalScore(result.getResultID()));
                 }
@@ -549,22 +493,13 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private void initializeLogs() {
-        userLogRepository.save(new UserLogs("LoG001", userRepository.findByEmail("psychologist@example.com").getUserId(), "192.168.0.1"));
+        userLogRepository.save(new UserLogs("LOG001", userRepository.findByEmail("psychologist@example.com").getUserId(), "192.168.0.1"));
         userLogRepository.save(new UserLogs("LOG002", userRepository.findByEmail("student2@example.com").getUserId(), "244.178.44.111"));
         userLogRepository.save(new UserLogs("LOG003", userRepository.findByEmail("psychologist@example.com").getUserId(), "38.0.101.76"));
         userLogRepository.save(new UserLogs("LOG004", userRepository.findByEmail("parent2@example.com").getUserId(), "89.0.142.86"));
     }
 
-    private void initializeArticles() {
-        articleRepository.save(new Article("ATC001", "Managing Stress", userRepository.findByEmail("psychologist@example.com").getUserId(), "Tips for managing stress..."));
-        articleRepository.save(new Article("ATC002", "Anxiety Management", userRepository.findByEmail("psychologist2@example.com").getUserId(), "Tips for managing anxiety..."));
-        articleRepository.save(new Article("ATC003", "Depression Management", userRepository.findByEmail("psychologist2@example.com").getUserId(), "Tips for managing depression..."));
-        articleRepository.save(new Article("ATC004", "Sleep Disorders", userRepository.findByEmail("psychologist@example.com").getUserId(), "Tips for managing sleep disorders..."));
-        articleRepository.save(new Article("ATC005", "Eating Disorders", userRepository.findByEmail("psychologist2@example.com").getUserId(), "Tips for managing eating disorders..."));
-        articleRepository.save(new Article("ATC006", "Addiction Management", userRepository.findByEmail("psychologist@example.com").getUserId(), "Tips for managing addiction..."));
-        articleRepository.save(new Article("ATC007", "Anxiety and Depression Management", userRepository.findByEmail("psychologist@example.com").getUserId(), "Tips for managing anxiety..."));
-        articleRepository.save(new Article("ATC008", "Stress Management", userRepository.findByEmail("psychologist2@example.com").getUserId(), "Tips for managing stress and anxiety ..."));
-    }
+
 
     private void initializeNotifications() {
         notificationRepository.save(new Notifications(__.generateNextNotificationID(), userRepository.findByEmail("psychologist@example.com").getUserId(), "Appointment Scheduled", "Your appointment is scheduled", NotificationType.APPOINTMENT));

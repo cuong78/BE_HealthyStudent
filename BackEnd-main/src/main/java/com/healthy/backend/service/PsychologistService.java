@@ -5,10 +5,7 @@ import com.healthy.backend.dto.psychologist.PsychologistRequest;
 import com.healthy.backend.dto.psychologist.PsychologistResponse;
 import com.healthy.backend.dto.timeslot.DefaultTimeSlotResponse;
 import com.healthy.backend.dto.timeslot.TimeSlotResponse;
-import com.healthy.backend.entity.DefaultTimeSlot;
-import com.healthy.backend.entity.Department;
-import com.healthy.backend.entity.Psychologists;
-import com.healthy.backend.entity.TimeSlots;
+import com.healthy.backend.entity.*;
 import com.healthy.backend.enums.PsychologistStatus;
 import com.healthy.backend.enums.TimeslotStatus;
 import com.healthy.backend.exception.AuthorizeException;
@@ -43,6 +40,32 @@ public class PsychologistService {
     private final GeneralService __;
 
     private final DefaultTimeSlotRepository defaultTimeSlotRepository;
+
+    private final PsychologistKPIRepository kpiRepository;
+
+
+    @Transactional
+    public void increaseAchievedSlots(String psychologistId, LocalDate slotDate) {
+        int month = slotDate.getMonthValue();
+        int year = slotDate.getYear();
+        PsychologistKPI kpi = kpiRepository.findByPsychologistIdAndMonthAndYear(psychologistId, month, year);
+        if (kpi == null) {
+            throw new ResourceNotFoundException("KPI not set for psychologist " + psychologistId);
+        }
+        kpi.setAchievedSlots(kpi.getAchievedSlots() + 1);
+        kpiRepository.save(kpi);
+    }
+
+    @Transactional
+    public void decreaseAchievedSlots(String psychologistId, LocalDate slotDate) {
+        int month = slotDate.getMonthValue();
+        int year = slotDate.getYear();
+        PsychologistKPI kpi = kpiRepository.findByPsychologistIdAndMonthAndYear(psychologistId, month, year);
+        if (kpi != null) {
+            kpi.setAchievedSlots(Math.max(kpi.getAchievedSlots() - 1, 0));
+            kpiRepository.save(kpi);
+        }
+    }
 
 
 
@@ -193,7 +216,8 @@ public class PsychologistService {
             String psychologistId,
             LocalDate slotDate,
             List<String> defaultSlotIds
-    ) {
+    )
+    {
         Psychologists psychologist = psychologistRepository.findById(psychologistId)
                 .orElseThrow(() -> new ResourceNotFoundException("Psychologist not found"));
 

@@ -13,11 +13,5 @@ public interface SurveyQuestionOptionsChoicesRepository extends JpaRepository<Su
     List<SurveyQuestionOptionsChoices> findByQuestionID(String questionId);
     List<SurveyQuestionOptionsChoices> findByResultID(String resultId);
 
-//    @Query("SELECT s FROM SurveyQuestionOptionsChoices s " +
-//            "JOIN FETCH s.question q " +
-//            "JOIN FETCH q.category c " +
-//            "JOIN FETCH s.option a " +
-//            "WHERE s.studentID = :studentId")
-//    List<SurveyQuestionOptionsChoices> findByStudentIDWithDetails(@Param("studentId") String studentId);
 
 }

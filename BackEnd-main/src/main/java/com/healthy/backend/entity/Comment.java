@@ -29,16 +29,9 @@ public class Comment {
     @Column(name = "ProgramID", length = 36)
     private String programID;
 
-    @ManyToOne
-    @JoinColumn(name = "ProgramID", insertable = false, updatable = false)
-    private Programs programs;
 
     @Column(name = "ArticleID", length = 36)
     private String articleID;
-
-    @ManyToOne
-    @JoinColumn(name = "Article", insertable = false, updatable = false)
-    private Article article;
 
     @Column(name = "SurveyID", length = 36)
     private String surveyID;

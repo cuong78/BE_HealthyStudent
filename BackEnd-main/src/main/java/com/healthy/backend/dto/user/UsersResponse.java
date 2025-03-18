@@ -2,8 +2,7 @@ package com.healthy.backend.dto.user;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.healthy.backend.dto.appointment.AppointmentResponse;
-import com.healthy.backend.dto.programs.ProgramParticipationResponse;
-import com.healthy.backend.dto.programs.ProgramsResponse;
+
 import com.healthy.backend.dto.psychologist.PsychologistResponse;
 import com.healthy.backend.dto.student.StudentResponse;
 import com.healthy.backend.dto.survey.SurveyResultsResponse;
@@ -58,8 +57,7 @@ public class UsersResponse {
     private List<StudentResponse> children;
     @Schema(examples = {"Appointment 1", "Appointment 2", "Appointment 3"})
     private List<AppointmentResponse> appointmentsRecord;
-    private List<ProgramParticipationResponse> programParticipationRecord;
-    private List<ProgramsResponse> programsRecord;
+
     @Schema(examples = {"Survey 1", "Survey 2", "Survey 3"})
     private List<SurveyResultsResponse> surveyResults;
     @Schema(example = "2023-01-01")

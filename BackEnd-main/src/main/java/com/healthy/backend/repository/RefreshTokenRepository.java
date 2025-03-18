@@ -13,7 +13,6 @@ import java.time.LocalDateTime;
 @Repository
 public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long> {
 
-    RefreshToken findByHashedToken(String hashedToken);
 
     RefreshToken findByUserId(String userId);
 

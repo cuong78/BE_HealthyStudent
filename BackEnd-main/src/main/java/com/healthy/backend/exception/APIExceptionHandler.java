@@ -1,5 +1,7 @@
 package com.healthy.backend.exception;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -16,6 +18,8 @@ import java.util.stream.Collectors;
 public class APIExceptionHandler {
     private static final Logger logger = LoggerFactory.getLogger(APIExceptionHandler.class);
 
+    @Getter
+    @Setter
     private static class ErrorResponse {
         private LocalDateTime timestamp;
         private String message;
@@ -24,11 +28,8 @@ public class APIExceptionHandler {
             this.timestamp = LocalDateTime.now();
             this.message = message;
         }
-
-        // Getters and setters
     }
 
-    // Runtime Exception - Internal Server Error (generic catch-all)
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ErrorResponse> handleRuntimeException(RuntimeException exception) {
         logger.error("Unexpected runtime error", exception);

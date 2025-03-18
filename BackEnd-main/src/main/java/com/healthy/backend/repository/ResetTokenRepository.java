@@ -15,12 +15,6 @@ public interface ResetTokenRepository extends JpaRepository<ResetToken, Long> {
 
     ResetToken findByUserId(String userId);
 
-    ResetToken findByHashedToken(String hashedToken);
-
-    @Modifying
-    @Query("DELETE FROM ResetToken r WHERE r.expiresAt <= :now")
-    void deleteExpiredTokens(@Param("now") LocalDateTime now);
-
     @Transactional
     @Modifying
     void deleteByUserId(String userId);

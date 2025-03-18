@@ -88,15 +88,7 @@ public class SurveyController {
         }
     }
 
-    @Operation(
-            deprecated = true,
-            summary = "Submit survey response",
-            description = "Submits a response to a survey."
-    )
-    @PostMapping("/take") // Only Student
-    public String submitSurveyResponse(@RequestParam String surveyId, @RequestBody String responses) {
-        return "Survey responses saved for survey " + surveyId;
-    }
+
 
     @Operation(
 
@@ -110,16 +102,7 @@ public class SurveyController {
         return ResponseEntity.ok(surveyResult);
     }
 
-    @Operation(
-            deprecated = true,
-            summary = "Submit survey feedback",
-            description = "Submits feedback for a survey."
-    )
-    @PostMapping("/feedback")  // Manager or Psychologist Only
-    public String submitSurveyFeedback(
-            @RequestParam String surveyId, @RequestBody String feedback) {
-        return "Feedback submitted for survey " + surveyId;
-    }
+
 
     @Operation(
             summary = "Create survey",
@@ -131,25 +114,6 @@ public class SurveyController {
         return ResponseEntity.status(HttpStatus.CREATED).body(new SurveyRequest());
     }
 
-    @Operation(
-            deprecated = true,
-            summary = "Update survey",
-            description = "Updates an existing survey."
-    )
-    @PutMapping("/update") // Manager or Psychologist Only
-    public String updateSurvey(@PathVariable String surveyId, @RequestBody String surveyDetails) {
-        return "Survey updated successfully";
-    }
-
-    @Operation(
-            deprecated = true,
-            summary = "Cancel survey",
-            description = "Cancels a survey."
-    )
-    @DeleteMapping("/cancel") // Manager or Psychologist Only
-    public String cancelSurvey(@RequestParam String surveyId) {
-        return "Survey canceled successfully";
-    }
 
     @Operation(
             summary = "Add question to survey",
@@ -169,15 +133,7 @@ public class SurveyController {
         }
     }
 
-    @Operation(
-            deprecated = true,
-            summary = "Delete question from survey",
-            description = "Deletes a question from a survey."
-    )
-    @DeleteMapping("/questions/{questionId}")
-    public String deleteSurveyQuestion(@RequestParam String surveyId, @PathVariable String questionId) {
-        return "Question removed from survey " + surveyId;
-    }
+
 
     @Operation(
             summary = "Add answer to question",
@@ -187,7 +143,7 @@ public class SurveyController {
     public ResponseEntity<?> addAnswerToQuestion(@RequestParam String surveyId, @PathVariable String questionId, @RequestBody List<QuestionOption> answer) {
         try {
             surveyService.addAnswerToQuestion(surveyId, questionId, answer);
-            ;
+            
             return ResponseEntity.ok("List of answers add sucessfully");
         } catch (ResourceNotFoundException ex) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
@@ -210,27 +166,7 @@ public class SurveyController {
         return ResponseEntity.ok(surveyResponse);
     }
 
-    @Operation(
-            deprecated = true,
-            summary = "Get survey dashboard",
-            description = "Returns a dashboard overview for surveys."
-    )
-    @GetMapping("/dashboard")
-    public String getSurveyDashboard() {
-        return "Survey dashboard overview";
-    }
 
-    @Operation(
-            deprecated = true,
-            summary = "Schedule survey",
-            description = "Schedules a survey."
-    )
-    @PostMapping("/schedule")
-    public String scheduleSurvey(
-            @RequestParam String surveyId,
-            @RequestBody String scheduleDetails) {
-        return "Survey " + surveyId + " scheduled successfully";
-    }
 
     @Operation(
             summary = "Update survey status",
@@ -250,25 +186,35 @@ public class SurveyController {
         }
     }
 
-    @Operation(
-            deprecated = true,
-            summary = "Enable anonymous survey",
-            description = "Enables anonymous mode for a survey."
-    )
-    @PostMapping("/anonymous")
-    public String enableAnonymousSurvey(@RequestParam String surveyId) {
-        return "Survey " + surveyId + " set to anonymous";
+
+
+    @GetMapping("/survey/{surveyId}/students/checkResultsToHaveAppointment")
+    public ResponseEntity<?> getLowScoringStudentsForAppointment(
+            HttpServletRequest request,
+            @PathVariable String surveyId)
+            {
+        try {
+            List<ConfirmationRequest> confirmationRequests = surveyService.getLowScoringStudentsForAppointment(request, surveyId);
+            return ResponseEntity.ok(confirmationRequests);
+        } catch (ResourceNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while processing the request" + ex.getMessage());
+        }
     }
 
-    @Operation(
-            deprecated = true,
-            summary = "Export survey results",
-            description = "Exports survey results in a specified format."
-    )
-    @GetMapping("/export")
-    public String exportSurveyResults(
-            @RequestParam String surveyId,
-            @RequestParam String format) {
-        return "Survey results exported in format: " + format;
+    @PostMapping("/survey/{surveyId}/students/appointments")
+    public ResponseEntity<?> handleAppointmentRequest(
+            @RequestBody List<ConfirmationRequest> requests)
+            {
+        try {
+            
+            return ResponseEntity.ok(surveyService.handleAppointmentRequest(requests) ? "You can make appointment now" : "");
+        } catch (ResourceNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while processing the request" + ex.getMessage());
+        }
     }
+
 }

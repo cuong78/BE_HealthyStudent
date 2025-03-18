@@ -5,5 +5,6 @@ public enum NotificationType {
     ON_LEAVE,
     SURVEY,
     PROGRAM,
-    DONE
+    DONE,
+    NOTIFICATION_TYPE
 }

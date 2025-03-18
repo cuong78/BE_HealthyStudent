@@ -23,5 +23,6 @@ public interface StudentRepository extends JpaRepository<Students, String> {
     @Query("SELECT COUNT(sss)  FROM Students sss")
     int countStudent();
 
+    List<Students> findByParentID(String parentId);
 
 } 

@@ -33,10 +33,12 @@ public class RegisterRequest {
     @NotBlank(message = "Email is required")
     @Email(message = "Invalid email format")
     @Schema(example = "user@example.com")
+    @Pattern(regexp = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$", message = "Invalid email format")
     private String email;
 
     @NotBlank(message = "Phone number is required")
     @Schema(example = "1234567890")
+    @Pattern(regexp = "^\\d{10}$", message = "Phone number must be 10 digits")
     private String phoneNumber;
 
     @Schema(example = "Example Address")

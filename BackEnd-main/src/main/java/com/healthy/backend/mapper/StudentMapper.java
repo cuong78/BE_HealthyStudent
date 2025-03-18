@@ -8,6 +8,7 @@ import com.healthy.backend.entity.Students;
 import com.healthy.backend.entity.Users;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Component
@@ -38,7 +39,7 @@ public class StudentMapper {
                 .depressionScore(student.getDepressionScore())
                 .anxietyScore(student.getAnxietyScore())
                 .stressScore(student.getStressScore())
-                .surveyResults(surveyResultsResponseList)
+                .surveyResults(surveyResultsResponseList.isEmpty() ? null : surveyResultsResponseList)
                 .build();
     }
 
@@ -82,9 +83,9 @@ public class StudentMapper {
                 .grade(student.getStudentDetails().getGrade())
                 .className(student.getStudentDetails().getClassName())
                 .schoolName(student.getStudentDetails().getSchoolName())
-                .depressionScore(0)
-                .anxietyScore(0)
-                .stressScore(0)
+                .depressionScore(BigDecimal.valueOf(0.0))
+                .anxietyScore(BigDecimal.valueOf(0.0))
+                .stressScore(BigDecimal.valueOf(0.0))
                 .user(user)
                 .build();
     }

@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 @Repository
 public interface AppointmentRepository extends JpaRepository<Appointments, String> , JpaSpecificationExecutor<Appointments> {
@@ -17,23 +18,41 @@ public interface AppointmentRepository extends JpaRepository<Appointments, Strin
     @Query("SELECT a.appointmentID FROM Appointments a ORDER BY a.appointmentID DESC LIMIT 1")
     String findLastAppointmentId();
 
-    List<Appointments> findByPsychologistIDAndStatusAndFeedbacksNotNull(String psychologistId, AppointmentStatus status);
 
     @Query("SELECT CASE WHEN COUNT(a) > 0 THEN true ELSE false END " +
             "FROM Appointments a " +
-            "WHERE a.studentID = :studentId AND a.timeSlotsID = :timeSlotId")
+            "WHERE a.studentID = :studentId " +
+            "AND a.timeSlotsID = :timeSlotId " +
+            "AND a.status != com.healthy.backend.enums.AppointmentStatus.CANCELLED")
     boolean existsByStudentIDAndTimeSlotsID(
             @Param("studentId") String studentId,
             @Param("timeSlotId") String timeSlotId);
 
 
 
-    @Query("SELECT a FROM Appointments a " +
-            "JOIN FETCH a.timeSlot " +
-            "JOIN FETCH a.student " +
-            "JOIN FETCH a.psychologist " +
-            "WHERE a.psychologistID = :psychologistId")
-    List<Appointments> findByPsychologistIDWithDetails(String psychologistId);
 
-    long countByPsychologistID(String psychologistID);
+
+    @Query("SELECT COUNT(a) FROM Appointments a " +
+            "WHERE (:startDate IS NULL OR a.createdAt >= :startDate) " +
+            "AND (:endDate IS NULL OR a.createdAt <= :endDate)")
+    Long countByDateRange(@Param("startDate") LocalDateTime startDate,
+                          @Param("endDate") LocalDateTime endDate);
+
+    @Query("SELECT COUNT(a) FROM Appointments a " +
+            "WHERE a.status = :status " +
+            "AND (:startDate IS NULL OR a.createdAt >= :startDate) " +
+            "AND (:endDate IS NULL OR a.createdAt <= :endDate)")
+    Long countByStatusAndDateRange(@Param("status") AppointmentStatus status,
+                                   @Param("startDate") LocalDateTime startDate,
+                                   @Param("endDate") LocalDateTime endDate);
+
+    @Query("SELECT a FROM Appointments a " +
+            "WHERE a.status = :status " +
+            "AND (:start IS NULL OR a.createdAt >= :start) " +
+            "AND (:end IS NULL OR a.createdAt <= :end)")
+    List<Appointments> findByStatusAndDateRange(
+            @Param("status") AppointmentStatus status,
+            @Param("start") LocalDateTime start,
+            @Param("end") LocalDateTime end
+    );
 } 

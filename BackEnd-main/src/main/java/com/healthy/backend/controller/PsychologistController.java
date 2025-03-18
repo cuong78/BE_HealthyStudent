@@ -43,12 +43,10 @@ public class PsychologistController {
     private final TokenService tokenService;
     private final StudentRepository studentRepository;
 
+
     @Operation(summary = "Get all psychologists")
     @GetMapping()
     public ResponseEntity<List<PsychologistResponse>> getAllPsychologist(HttpServletRequest request) {
-        if (!tokenService.validateRole(request, Role.MANAGER)) {
-            throw new AuthorizeException("Unauthorized access, only Managers can view psychologists");
-        }
         List<PsychologistResponse> psychologistResponse = psychologistService.getAllPsychologistDTO();
         return !psychologistResponse.isEmpty() ? ResponseEntity.ok(psychologistResponse) : ResponseEntity.noContent().build();
     }
@@ -185,6 +183,8 @@ public class PsychologistController {
                 request.getDefaultSlotIds()
         );
         return ResponseEntity.ok(responses);
+
+
     }
 
 

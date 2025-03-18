@@ -19,13 +19,7 @@ public interface AuthenticationRepository extends JpaRepository<Users, String> {
             @NotBlank(message = "Token is required")
             String token);
 
-    Users findByPhoneNumber(
-            @NotBlank(message = "Phone number is required")
-            String phoneNumber);
 
-    boolean existsByHashedID(
-            @NotBlank(message = "Username is required")
-            String username);
 
     boolean existsByEmail(
             @NotBlank(message = "Email is required")

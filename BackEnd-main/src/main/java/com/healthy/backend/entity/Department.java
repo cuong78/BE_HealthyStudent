@@ -26,9 +26,6 @@ public class Department {
     @OneToMany(mappedBy = "department")
     private Set<Psychologists> psychologists;
 
-    @OneToMany(mappedBy = "department")
-    private Set<Programs> programs;
-
     public Department(String departmentID, String name) {
         this.departmentID = departmentID;
         this.name = name;

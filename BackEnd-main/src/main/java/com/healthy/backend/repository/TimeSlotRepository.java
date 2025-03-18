@@ -37,4 +37,6 @@ public interface TimeSlotRepository extends JpaRepository<TimeSlots, String> {
             LocalTime startTime,
             LocalTime endTime
     );
+
+
 }

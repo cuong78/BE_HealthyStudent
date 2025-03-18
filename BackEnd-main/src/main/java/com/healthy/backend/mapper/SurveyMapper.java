@@ -1,7 +1,10 @@
 package com.healthy.backend.mapper;
 
 import com.healthy.backend.dto.survey.*;
-import com.healthy.backend.entity.*;
+import com.healthy.backend.entity.SurveyQuestionOptions;
+import com.healthy.backend.entity.SurveyQuestionOptionsChoices;
+import com.healthy.backend.entity.SurveyQuestions;
+import com.healthy.backend.entity.Surveys;
 import com.healthy.backend.exception.ResourceNotFoundException;
 import org.springframework.stereotype.Component;
 
@@ -31,7 +34,7 @@ public class SurveyMapper {
                 .build();
     }
 
-    public SurveysResponse buildSurveysResponse(Surveys survey, int numberOfQuestions, String completeStatus,String score) {
+    public SurveysResponse buildSurveysResponse(Surveys survey, int numberOfQuestions, String completeStatus, String score) {
         return SurveysResponse.builder()
                 .id(survey.getSurveyID())
                 .title(survey.getSurveyName())
@@ -48,15 +51,39 @@ public class SurveyMapper {
                 .score(score)
                 .build();
     }
+    public SurveysResponse buildSurveysResponse1(Surveys survey, int numberOfQuestions, String completeStatus, List<StatusStudent> status) {
+        return SurveysResponse.builder()
+                .id(survey.getSurveyID())
+                .title(survey.getSurveyName())
+                .description(survey.getDescription())
+                .categoryID(survey.getCategory().getCategoryID())
+                .duration(survey.getDuration())
+                .numberOfQuestions(numberOfQuestions)
+                .categoryName(survey.getCategory().getCategoryName().name())
+                .status(String.valueOf(survey.getStatus()))
+                .detailedDescription(survey.getDetails())
+                .createdAt(survey.getCreatedAt().toString())
+                .createBy(survey.getCreator().getFullName())
+                .completeStatus(completeStatus)
+                .statusStudent(status)
+                .build();
+        }           
 
 
-    public StatusStudent maptoResultStudent1(String status, String score, SurveyResult surveyResult) {
+    public StatusStudent maptoResultStudent1(String status, String score, String studentId) {
         return StatusStudent.builder()
-                .status(status)
                 .score(score)
-                .studentId(surveyResult.getStudentID())
+                .studentId(studentId)
                 .build();
     }
+
+//     public StatusStudent maptoResultStudent2(String status, String score, String studentId, String complete) {
+//         return StatusStudent.builder()
+//                 .score(score)
+//                 .studentId(studentId)
+//                 .completeStatus(complete)
+//                 .build();
+//     }
 
     public SurveyResultsResponse mapToListResultsResponse(Surveys survey, List<StatusStudent> std) {
         return SurveyResultsResponse.builder()

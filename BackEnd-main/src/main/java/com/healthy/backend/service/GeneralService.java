@@ -10,32 +10,23 @@ import org.springframework.stereotype.Component;
 public class GeneralService {
 
     private final UserRepository userRepository;
-    private final TagsRepository tagsRepository;
     private final SurveyRepository surveyRepository;
     private final ParentRepository parentRepository;
-    private final ProgramRepository programRepository;
     private final StudentRepository studentRepository;
     private final UserLogRepository userLogRepository;
-    private final ArticleRepository articleRepository;
     private final DepartmentRepository departmentRepository;
     private final AppointmentRepository appointmentRepository;
     private final NotificationRepository notificationRepository;
     private final PsychologistRepository psychologistRepository;
-    private final ProgramScheduleRepository programScheduleRepository;
-    private final ProgramParticipationRepository programParticipationRepository;
+
     private final SurveyQuestionOptionsRepository surveyQuestionOptionsRepository;
     private final SurveyQuestionRepository surveyQuestionRepository;
     private final SurveyResultRepository surveyResultRepository;
 
-    public String generateProgramScheduleID() {
-        String lastCode = programScheduleRepository.findLastProgramScheduleId();
-        return generateNextId(Identifier.SCH.toString(), lastCode);
-    }
 
-    public String generateParticipantID() {
-        String lastCode = programParticipationRepository.findLastParticipationCode();
-        return generateNextId(Identifier.PRT.toString(), lastCode);
-    }
+
+
+
 
     public String generateDepartmentID() {
         String lastCode = departmentRepository.findLastDepartmentId();
@@ -47,20 +38,14 @@ public class GeneralService {
         return generateNextId(Identifier.LOG.toString(), lastCode);
     }
 
-    public String generateArticleID() {
-        String lastCode = articleRepository.findLastArticleId();
-        return generateNextId(Identifier.ART.toString(), lastCode);
-    }
+
 
     public String generateSurveyID() {
         String lastCode = surveyRepository.findLastSurveyId();
         return generateNextId(Identifier.SUV.toString(), lastCode);
     }
 
-    public String generateTagID() {
-        String lastCode = tagsRepository.findLastTagId();
-        return generateNextId(Identifier.TAG.toString(), lastCode);
-    }
+
 
     public String generateUserID() {
         String lastCode = userRepository.findLastUserId();
@@ -82,10 +67,7 @@ public class GeneralService {
         return generateNextId(Identifier.PSY.toString(), lastCode);
     }
 
-    public String generateProgramID() {
-        String lastCode = programRepository.findLastProgramId();
-        return generateNextId(Identifier.PRG.toString(), lastCode);
-    }
+
 
     public String generateNextNotificationID() {
         String lastCode = notificationRepository.findLastNotificationId();

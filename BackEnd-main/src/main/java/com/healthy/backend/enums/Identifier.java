@@ -22,5 +22,6 @@ public enum Identifier {
     DPT,  // Department
     TAG,  // Tag
     CAT,  // Category
-    SCH,  // Schedule
+    SCH,
+    SHE,// Schedule
 }

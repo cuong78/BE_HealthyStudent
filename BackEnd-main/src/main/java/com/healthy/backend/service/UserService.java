@@ -1,8 +1,6 @@
 package com.healthy.backend.service;
 
 import com.healthy.backend.dto.appointment.AppointmentResponse;
-import com.healthy.backend.dto.event.EventResponse;
-import com.healthy.backend.dto.programs.ProgramsResponse;
 import com.healthy.backend.dto.survey.SurveyResultsResponse;
 import com.healthy.backend.dto.user.UsersResponse;
 import com.healthy.backend.entity.*;
@@ -23,18 +21,14 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final ParentRepository parentRepository;
-    private final ProgramRepository programRepository;
     private final StudentRepository studentRepository;
     private final AppointmentRepository appointmentRepository;
     private final SurveyResultRepository surveyResultRepository;
     private final PsychologistRepository psychologistRepository;
-    private final ProgramParticipationRepository programParticipationRepository;
 
     private final UserMapper userMapper;
-    private final EventMapper eventMapper;
     private final SurveyMapper surveyMapper;
     private final StudentMapper studentMapper;
-    private final ProgramMapper programMapper;
     private final AppointmentMapper appointmentMapper;
     private final PsychologistsMapper psychologistsMapper;
 
@@ -60,18 +54,12 @@ public class UserService {
             case STUDENT -> {
                 return getStudentDetails(user);
             }
-            case PARENT -> {
-                return getParentDetails(user);
-            }
             case PSYCHOLOGIST -> {
                 return getPsychologistDetails(user);
             }
-            case MANAGER -> {
-                break;
-            }
+
             default -> throw new ResourceNotFoundException("User not found with id: " + userId);
         }
-        return new UsersResponse();
     }
 
     public UsersResponse updateUser(String userId, Users updatedUser) {
@@ -112,10 +100,10 @@ public class UserService {
                 studentMapper.buildStudentResponse(studentRepository
                         .findByUserID(user.getUserId()), surveyResultsResponseList),
                 getStudentAppointments(user.getUserId()),
-                getUserProgramParticipation(user.getUserId()),
                 surveyResultsResponseList,
                 null);
     }
+
 
     private UsersResponse getPsychologistDetails(Users user) {
         return userMapper.buildUserDetailsResponse(
@@ -123,69 +111,10 @@ public class UserService {
                 psychologistsMapper.buildPsychologistResponse(psychologistRepository.findByUserID(user.getUserId())),
                 null,
                 getPsychologistAppointments(user.getUserId()),
-                getUserProgramFacility(user.getUserId()),
                 null,
                 null);
     }
 
-    private UsersResponse getParentDetails(Users user) {
-        Parents parent = parentRepository.findByUserID(user.getUserId());
-        return userMapper.buildUserDetailsResponse(
-                user,
-                null,
-                null,
-                null,
-                null,
-                null,
-                parent.getStudents().stream()
-                        .map(studentMapper::buildStudentResponse)
-                        .peek(student -> student.setUsersResponse(getStudentDetails(studentRepository.findByUserID(student.getUserId()).getUser())))
-                        .toList());
-    }
-
-    public EventResponse getAllEvents(String userId) {
-        Users users = userRepository.findByUserId(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
-        List<Appointments> appointments = List.of();
-        List<Programs> programs = List.of();
-
-        if (users.getRole().equals(Role.STUDENT)) {
-            String studentID = studentRepository.findByUserID(userId).getStudentID();
-            appointments = appointmentRepository.findByStudentID(studentID);
-            programs = programParticipationRepository.findByStudentID(studentID)
-                    .stream()
-                    .map(participation -> programRepository
-                            .findById(participation.getProgram().getProgramID())
-                            .orElseThrow(() -> new ResourceNotFoundException("Program not found")))
-                    .toList();
-        }
-        if (users.getRole().equals(Role.PSYCHOLOGIST)) {
-            String psychologistID = psychologistRepository.findByUserID(userId).getPsychologistID();
-            appointments = appointmentRepository.findByPsychologistID(psychologistID);
-            programs = programRepository.findByFacilitatorID(psychologistID);
-        }
-        if (users.getRole().equals(Role.MANAGER)) {
-            appointments = appointmentRepository.findAll();
-            programs = programRepository.findAll();
-        }
-        appointments = appointments.stream()
-                .filter(appointment -> appointment.getTimeSlot().getSlotDate().isAfter(LocalDate.now().minusDays(1)))
-                .toList();
-
-        programs = programs.stream()
-                .filter(program -> program.getStartDate().isAfter(LocalDate.now().minusDays(1))).toList();
-
-        if (appointments.isEmpty() && programs.isEmpty()) {
-            return eventMapper.buildEmptyEventResponse(appointments, programs, userId);
-        }
-
-        return switch (users.getRole()) {
-            case STUDENT -> eventMapper.buildStudentEventResponse(appointments, programs, userId);
-            case PSYCHOLOGIST -> eventMapper.buildPsychologistEventResponse(appointments, programs, userId);
-            case MANAGER -> eventMapper.buildManagerEventResponse(appointments, programs, userId);
-            default -> throw new ResourceNotFoundException("User not found with id: " + userId);
-        };
-    }
 
     public UsersResponse deactivateUser(String userId) {
         Users user = userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User not found"));
@@ -284,45 +213,17 @@ public class UserService {
                         appointmentMapper.buildAppointmentResponse(
                                 appointment,
                                 psychologistsMapper.buildPsychologistResponse(
-                                        psychologistRepository.findByUserID(
+                                        psychologistRepository.findByPsychologistID(
                                                 appointment.getPsychologistID())),
                                 null
                         ))
                 .toList();
     }
 
-    private List<ProgramsResponse> getUserProgramFacility(String id) {
-        return programRepository.findByFacilitatorID(id)
-                .stream()
-                .map(programs -> programMapper.buildProgramsDetailsResponse(programs,
-                        programParticipationRepository.findStudentIDsByProgramID(
-                                        programs.getProgramID()).stream()
-                                .map(studentRepository::findByStudentID)
-                                .map(studentMapper::buildStudentResponse)
-                                .peek(sr -> {
-                                    ProgramParticipation programParticipation = programParticipationRepository
-                                            .findByProgramIDAndStudentID(programs.getProgramID(), sr.getStudentId()).getLast();
-                                    if (programParticipation != null) {
-                                        sr.setProgramStatus(programParticipation.getStatus().name());
-                                    }
-                                })
-                                .toList()
-                )).toList();
-    }
+
 
     // Get user program participation
-    private List<ProgramsResponse> getUserProgramParticipation(String userId) {
-        String student = studentRepository.findByUserID(userId).getStudentID();
-        List<ProgramParticipation> participation = programParticipationRepository.findByStudentID(student);
-        // Construct responses
-        return participation.stream()
-                .map(programParticipation -> programMapper.buildProgramResponse(
-                        programParticipation.getProgram(),
-                        programParticipationRepository.findStudentIDsByProgramID(
-                                programParticipation.getProgramID()).size()
-                ))
-                .toList();
-    }
+
 
     // Check if database is empty
     private boolean isDatabaseEmpty() {

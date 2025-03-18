@@ -230,24 +230,7 @@ public class UserController {
         throw new OperationFailedException("Failed to delete user account");
     }
 
-    @Operation(
-            summary = "Get all events",
-            description = "Returns a list of all events for a specific user."
-    )
-    @GetMapping("/events")
-    public ResponseEntity<?> getAllEvents(
-            @RequestParam(required = false) String userId,
-            HttpServletRequest request) {
-        userId = tokenService.validateRequestUserID(request, userId);
-        if (tokenService.validateUID(request, userId)
-                && !tokenService.isManager(request)) {
-            throw new OperationFailedException("You can not get other users events");
-        }
-        EventResponse events = userService.getAllEvents(userId);
-        return events == null
-                ? ResponseEntity.noContent().build()
-                : ResponseEntity.ok(events);
-    }
+
 
     @Operation(
             summary = "Get user's appointments",

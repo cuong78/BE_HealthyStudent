@@ -10,10 +10,8 @@ import java.util.List;
 
 @Repository
 public interface SurveyQuestionRepository extends JpaRepository<SurveyQuestions, String> {
-    List<SurveyQuestions> findByQuestionIDIn(List<String> QuestionId) ;
-    SurveyQuestions findByQuestionIDAndSurveyID(String QuestionID, String surveyID);
+
     List<SurveyQuestions> findBySurveyID(String surveyID);
-    List<SurveyQuestions> findByQuestionID (String questionId);
 
     // @Query("SELECT sq from SurveyQuestions sq ORDER BY sq.questionID DESC")
     SurveyQuestions findFirstByOrderByQuestionIDDesc();

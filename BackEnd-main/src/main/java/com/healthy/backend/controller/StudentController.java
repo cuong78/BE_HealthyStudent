@@ -1,7 +1,6 @@
 package com.healthy.backend.controller;
 
 import com.healthy.backend.dto.appointment.AppointmentResponse;
-import com.healthy.backend.dto.programs.ProgramsResponse;
 import com.healthy.backend.dto.student.StudentRequest;
 import com.healthy.backend.dto.student.StudentResponse;
 import com.healthy.backend.dto.survey.SurveysResponse;
@@ -67,22 +66,9 @@ public class StudentController {
     }
 
     // Get programs assigned to student
-    @Operation(summary = "Get programs assigned to student", description = "Returns a list of programs assigned to a student.")
-    @GetMapping("/programs")
-    public ResponseEntity<List<ProgramsResponse>> getStudentPrograms(
-            @RequestParam(required = false) String studentId,
-            HttpServletRequest request) {
-        return ResponseEntity.ok(studentService.getEnrolledPrograms(studentId, request));
-    }
 
-    // Get completed programs
-    @Operation(summary = "Get completed programs", description = "Returns a list of completed programs.")
-    @GetMapping("/programs/completed")
-    public ResponseEntity<List<ProgramsResponse>> getCompletedPrograms(
-            @RequestParam(required = false) String studentId,
-            HttpServletRequest request) {
-        return ResponseEntity.ok(studentService.getCompletedPrograms(studentId, request));
-    }
+
+
 
     // Get student appointments
     @Operation(summary = "Get student appointments", description = "Returns a list of student appointments.")

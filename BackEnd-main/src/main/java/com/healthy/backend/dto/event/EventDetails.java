@@ -2,7 +2,6 @@ package com.healthy.backend.dto.event;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.healthy.backend.dto.appointment.AppointmentResponse;
-import com.healthy.backend.dto.programs.ProgramsResponse;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -17,5 +16,4 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class EventDetails {
     private List<AppointmentResponse> appointment;
-    private List<ProgramsResponse> program;
 }

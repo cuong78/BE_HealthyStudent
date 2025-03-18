@@ -1,9 +1,6 @@
 package com.healthy.backend.controller;
 
-import com.healthy.backend.dto.appointment.AppointmentRequest;
-import com.healthy.backend.dto.appointment.AppointmentResponse;
-import com.healthy.backend.dto.appointment.AppointmentUpdateRequest;
-import com.healthy.backend.dto.appointment.CheckOutRequest;
+import com.healthy.backend.dto.appointment.*;
 import com.healthy.backend.entity.Appointments;
 import com.healthy.backend.entity.Psychologists;
 import com.healthy.backend.entity.Students;
@@ -25,6 +22,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
@@ -43,7 +41,6 @@ import java.util.List;
 public class AppointmentController {
 
     private final AppointmentService appointmentService;
-    private final NotificationService notificationService;
     private final TokenService tokenService;
     private final UserRepository userRepository;
     private final PsychologistRepository psychologistRepository;
@@ -154,19 +151,22 @@ public class AppointmentController {
 
 
     // Hủy lịch hẹn
+    // Trong AppointmentController
     @Operation(summary = "Request cancel of an appointment")
     @PutMapping("/{appointmentId}/cancel")
     public ResponseEntity<AppointmentResponse> cancelAppointment(
             @PathVariable String appointmentId,
+            @Valid @RequestBody CancelAppointmentRequest cancelRequest, // Thêm request body
             HttpServletRequest request) {
+
         Users currentUser = tokenService.retrieveUser(request);
         AppointmentResponse response = appointmentService.cancelAppointment(
                 appointmentId,
-                currentUser.getUserId()
+                currentUser.getUserId(),
+                cancelRequest.getReason() // Truyền lý do vào service
         );
         return ResponseEntity.ok(response);
     }
-
 
     // Check-in - chỉ Psychologist
     @Operation(summary = "Check in to an appointment")

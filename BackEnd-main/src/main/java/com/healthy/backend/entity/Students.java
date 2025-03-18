@@ -3,6 +3,8 @@ package com.healthy.backend.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
+
 @Entity
 @Getter
 @Setter
@@ -32,14 +34,14 @@ public class Students {
     @Column(name = "SchoolName", length = 100)
     private String schoolName;
 
-    @Column(name = "AnxietyScore")
-    private Integer anxietyScore;
+    @Column(name = "AnxietyScore", precision = 5, scale = 2)
+    private BigDecimal anxietyScore;
 
-    @Column(name = "StressScore")
-    private Integer stressScore;
+    @Column(name = "StressScore", precision = 5, scale = 2)
+    private BigDecimal stressScore;
 
-    @Column(name = "DepressionScore")
-    private Integer depressionScore;
+    @Column(name = "DepressionScore", precision = 5, scale = 2)
+    private BigDecimal depressionScore;
 
     @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "UserID", referencedColumnName = "UserID", insertable = false, updatable = false)
@@ -49,7 +51,7 @@ public class Students {
     @JoinColumn(name = "ParentID", referencedColumnName = "ParentID", insertable = false, updatable = false)
     private Parents parents;
 
-    public Students(String studentID, String userID, Integer grade, String className, String schoolName, Integer anxietyScore, Integer depressionScore, Integer stressScore) {
+    public Students(String studentID, String userID, Integer grade, String className, String schoolName, BigDecimal anxietyScore, BigDecimal depressionScore, BigDecimal stressScore) {
         this.studentID = studentID;
         this.userID = userID;
         this.grade = grade;
@@ -59,7 +61,7 @@ public class Students {
         this.anxietyScore = anxietyScore;
         this.stressScore = stressScore;
     }
-    public Students(String studentID, String userID, String parentID, Integer grade, String className, String schoolName, Integer anxietyScore, Integer depressionScore, Integer stressScore) {
+    public Students(String studentID, String userID, String parentID, Integer grade, String className, String schoolName, BigDecimal anxietyScore, BigDecimal depressionScore, BigDecimal stressScore) {
         this.studentID = studentID;
         this.userID = userID;
         this.parentID = parentID;
