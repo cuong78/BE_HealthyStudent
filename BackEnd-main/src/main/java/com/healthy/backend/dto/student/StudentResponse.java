@@ -1,7 +1,6 @@
 package com.healthy.backend.dto.student;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.healthy.backend.dto.survey.SurveyResultsResponse;
 import com.healthy.backend.dto.user.UsersResponse;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;

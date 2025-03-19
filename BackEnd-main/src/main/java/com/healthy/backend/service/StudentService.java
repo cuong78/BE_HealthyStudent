@@ -3,7 +3,6 @@ package com.healthy.backend.service;
 import com.healthy.backend.dto.appointment.AppointmentResponse;
 import com.healthy.backend.dto.student.StudentRequest;
 import com.healthy.backend.dto.student.StudentResponse;
-import com.healthy.backend.dto.survey.SurveysResponse;
 import com.healthy.backend.entity.*;
 import com.healthy.backend.enums.AppointmentStatus;
 import com.healthy.backend.exception.OperationFailedException;

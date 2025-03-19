@@ -47,6 +47,18 @@ public class SurveyResult {
     @Column(name = "CreatedAt", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "DepressionScore")
+    private Integer depressionScore; // For DASS21
+
+    @Column(name = "AnxietyScore")
+    private Integer anxietyScore; // For DASS21
+
+    @Column(name = "StressScore")
+    private Integer stressScore; // For DASS21
+
+    @Column(name = "TotalScore")
+    private Integer totalScore; // For CFQ
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();

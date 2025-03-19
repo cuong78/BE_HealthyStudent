@@ -47,9 +47,7 @@ public class Surveys {
     @Column(name = "Status", length = 50, nullable = false)
     private SurveyStatus status;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "CategoryID", referencedColumnName = "CategoryID", insertable = false, updatable = false)
-    private Categories category;
+
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "CreatedBy", referencedColumnName = "UserID", insertable = false, updatable = false)
@@ -57,6 +55,14 @@ public class Surveys {
 
     @OneToMany(mappedBy = "surveys", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Notifications> notifications;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "SurveyType", nullable = false)
+    private SurveyType surveyType; // NEW FIELD
+
+    public enum SurveyType {
+        DASS21, CFQ
+    }
 
     public Surveys(String surveyID, String surveyName, String description, String categoryID, String createdBy, SurveyStatus status) {
         this.surveyID = surveyID;

@@ -35,6 +35,9 @@ public class SurveyQuestions {
     @JoinColumn(name = "CategoryID", referencedColumnName = "CategoryID", insertable = false, updatable = false)
     private Categories category;
 
+    @Column(name = "QuestionGroup")
+    private String questionGroup;
+
     public SurveyQuestions(String questionID, String surveyID, String questionText, String categoryID) {
         this.questionID = questionID;
         this.surveyID = surveyID;
